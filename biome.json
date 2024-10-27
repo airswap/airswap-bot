@@ -1,0 +1,12 @@
+{
+	"linter": {
+		"rules": {
+			"suspicious": {
+				"noExplicitAny": "off"
+			}
+		}
+	},
+	"files": {
+		"ignore": ["build/**", "node_modules/**"]
+	}
+}

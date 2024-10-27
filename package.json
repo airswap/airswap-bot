@@ -1,0 +1,47 @@
+{
+	"name": "airswap-bot",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "rm -rf ./build && tsc",
+		"dev": "ts-node src/index.ts | ./node_modules/.bin/bunyan",
+		"docker:build": "docker build . -t airswap/bot",
+		"lint": "biome check --write",
+		"start": "node ./build/index.js | ./node_modules/.bin/bunyan",
+		"stats": "ts-node scripts/stats",
+		"compliance": "ts-node scripts/compliance",
+		"inspect": "ts-node scripts/inspect",
+		"launch": "ts-node scripts/launch"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@airswap/pool": "5.0.0",
+		"@airswap/registry": "5.0.0",
+		"@airswap/staking": "5.0.0",
+		"@airswap/delegate": "5.0.0",
+		"@airswap/swap-erc20": "5.0.0",
+		"@airswap/utils": "5.0.0",
+		"@ethersproject/units": "^5.7.0",
+		"@uniswap/v3-sdk": "^3.9.0",
+		"alchemy-sdk": "^3.1.2",
+		"bunyan": "^1.8.15",
+		"discord.js": "^14.16.3",
+		"dotenv": "^16.0.3",
+		"erc-20-abi": "^1.0.0",
+		"ethers": "^5.7.2",
+		"ipfs-http-client": "55.0.0",
+		"it-last": "1.0.5",
+		"jayson": "^4.1.2",
+		"twitter-api-v2": "^1.14.2",
+		"valid-url": "^1.0.9"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/bunyan": "^1.8.11",
+		"@types/node": "^22.8.0",
+		"ts-node": "^10.9.2",
+		"typescript": "5.1"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
