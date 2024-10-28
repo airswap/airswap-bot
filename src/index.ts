@@ -53,7 +53,7 @@ async function publish(type: string, evt: EventParams) {
 	}
 }
 
-async function start() {
+async function startup() {
 	// Initialize channels
 	for (const channel in channels) {
 		await channels[channel].init();
@@ -92,13 +92,13 @@ async function start() {
 	}
 }
 
-async function stop() {
+async function shutdown() {
 	for (const channel in channels) {
-		await channels[channel].close();
+		await channels[channel]?.close();
 	}
 	for (const chainId of Object.keys(networks)) {
 		for (const listenerName of Object.keys(listeners)) {
-			await networks[chainId][listenerName].stop();
+			await networks[chainId][listenerName]?.stop();
 		}
 	}
 }
@@ -109,21 +109,21 @@ process.on("uncaughtException", (err) => {
 			config.logger.error(
 				"WebSocket: Connection dropped, restarting in 10s...",
 			);
-			stop().then(() => setTimeout(start, RECONNECT_DELAY));
+			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
 			break;
 		case "getaddrinfo ENOTFOUND mainnet.infura.io":
 			config.logger.error("INFURA: Cannot connect, restarting in 10s...");
-			stop().then(() => setTimeout(start, RECONNECT_DELAY));
+			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
 			break;
 		case "getaddrinfo ENOTFOUND discord.com":
 			config.logger.error("DISCORD: Cannot connect, restarting in 10s...");
-			stop().then(() => setTimeout(start, RECONNECT_DELAY));
+			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
 			break;
 		default:
 			config.logger.error(err.message, "restarting in 10s...");
-			stop().then(() => setTimeout(start, RECONNECT_DELAY));
+			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
 			break;
 	}
 });
 
-start();
+startup();

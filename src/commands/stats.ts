@@ -17,8 +17,8 @@ dotenv.config();
 
 const V4_YTD = 411640000;
 const AST_TOTAL_SUPPLY = 5000000000000;
-const SAST_V3_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
-const SAST_V4_ADDRESS = "0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534";
+const SAST_V3_ADDRESS = "0x6d88B09805b90dad911E5C5A512eEDd984D6860B";
+const SAST_V4_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
 
 export default function formatNumber(num: number, precision = 2) {
 	const map = [
@@ -152,19 +152,19 @@ export const stats = async () => {
 		signerTokenInfo = await getTokenInfo(provider, largest.signerToken);
 	}
 
-	const erc20Contract = new ethers.Contract(
+	const stakingToken = new ethers.Contract(
 		stakingTokenAddresses[ChainIds.MAINNET],
 		erc20Interface,
 		provider,
 	);
 	const supply = BigNumber.from(AST_TOTAL_SUPPLY);
-	const treasury = await erc20Contract.balanceOf(
+	const treasury = await stakingToken.balanceOf(
 		"0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534",
 	);
 	const treasuryBalance = BigNumber.from(treasury);
 	const circulating = supply.sub(treasuryBalance);
-	const sASTv3 = await erc20Contract.balanceOf(SAST_V3_ADDRESS);
-	const sASTv4 = await erc20Contract.balanceOf(SAST_V4_ADDRESS);
+	const sASTv3 = await stakingToken.balanceOf(SAST_V3_ADDRESS);
+	const sASTv4 = await stakingToken.balanceOf(SAST_V4_ADDRESS);
 	const totalStaked = BigNumber.from(sASTv3).add(sASTv4);
 	const percentStaked = FixedNumber.from(totalStaked)
 		.divUnsafe(FixedNumber.from(circulating))
