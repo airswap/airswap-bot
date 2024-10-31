@@ -14,9 +14,11 @@ import {
 const HTTP_PROVIDERS = [137, 43114];
 const WS_PROVIDERS = [1];
 const RECONNECT_DELAY = 10000;
+
 const config = new Config();
 const channels = [new Discord(config), new Twitter(config)];
 const networks: Record<number, ethers.providers.Provider> = {};
+let restarting = false;
 
 async function publish(type: string, evt: EventParams) {
 	if (config.get("PUBLISHING")) {
@@ -26,7 +28,7 @@ async function publish(type: string, evt: EventParams) {
 					channels.map(async (channel) => {
 						await channel.publishSwap(evt as SwapEventParams);
 						config.logger.info(
-							`✅ [Big Swap] ${await channel.name()} ${getReceiptUrl(
+							`✅ [Big Swap] ${channel.name} ${getReceiptUrl(
 								evt.chainId,
 								evt.hash,
 							)}`,
@@ -37,7 +39,7 @@ async function publish(type: string, evt: EventParams) {
 					channels.map(async (channel) => {
 						await channel.publishEvent(evt);
 						config.logger.info(
-							`✅ [${evt.name} Event] ${await channel.name()} ${getReceiptUrl(
+							`✅ [${evt.name} Event] ${channel.name} ${getReceiptUrl(
 								evt.chainId,
 								evt.hash,
 							)}`,
@@ -55,6 +57,7 @@ async function publish(type: string, evt: EventParams) {
 
 async function startup() {
 	// Initialize channels
+	config.logger.info(`Channels: ${channels.map((c) => c.name).join(", ")}`);
 	for (const channel in channels) {
 		await channels[channel].init();
 	}
@@ -92,37 +95,29 @@ async function startup() {
 	}
 }
 
-async function shutdown() {
+async function restart() {
+	restarting = true;
+	// Close channels
 	for (const channel in channels) {
 		await channels[channel]?.close();
 	}
+	// Stop listeners
 	for (const chainId of Object.keys(networks)) {
 		for (const listenerName of Object.keys(listeners)) {
 			await networks[chainId][listenerName]?.stop();
 		}
 	}
+	// Restart after delay
+	setTimeout(() => {
+		restarting = false;
+		startup();
+	}, RECONNECT_DELAY);
 }
 
 process.on("uncaughtException", (err) => {
-	switch (err.message) {
-		case "WebSocket was closed before the connection was established":
-			config.logger.error(
-				"WebSocket: Connection dropped, restarting in 10s...",
-			);
-			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
-			break;
-		case "getaddrinfo ENOTFOUND mainnet.infura.io":
-			config.logger.error("INFURA: Cannot connect, restarting in 10s...");
-			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
-			break;
-		case "getaddrinfo ENOTFOUND discord.com":
-			config.logger.error("DISCORD: Cannot connect, restarting in 10s...");
-			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
-			break;
-		default:
-			config.logger.error(err.message, "restarting in 10s...");
-			shutdown().then(() => setTimeout(startup, RECONNECT_DELAY));
-			break;
+	config.logger.error(err.message);
+	if (!restarting) {
+		restart();
 	}
 });
 

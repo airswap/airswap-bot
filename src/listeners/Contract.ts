@@ -30,16 +30,17 @@ export class Contract {
 		this.abi = abi;
 	}
 
-	private listener = async (eventName: string, ...args: any[]) => {
+	private listener = async (...args: any[]) => {
+		const event: ethers.Event = args[args.length - 1];
 		const chainId = (await this.provider.getNetwork()).chainId;
 		this.publish(this.name, {
-			name: eventName,
+			name: event.event,
+			hash: event.transactionHash,
 			...args,
-			hash: args[args.length - 1].transactionHash,
 		});
 		this.config.logger.trace(
-			`[${chainId}] ${this.name}:${eventName}`,
-			getReceiptUrl(chainId, args[args.length - 1].transactionHash),
+			`[${chainId}] ${this.name}:${event.event}`,
+			getReceiptUrl(chainId, event.transactionHash),
 		);
 	};
 
