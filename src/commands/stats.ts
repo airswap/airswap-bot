@@ -11,11 +11,10 @@ import { BigNumber, FixedNumber, ethers } from "ethers";
 import { getHTTPProviderURL } from "../utils";
 
 import erc20Abi from "erc-20-abi";
+import type Config from "../config";
 const erc20Interface = new ethers.utils.Interface(erc20Abi);
 
 dotenv.config();
-
-const subgraphURL = `https://gateway.thegraph.com/api/${process.env.SUBGRAPH_KEY}/subgraphs/id/${process.env.SUBGRAPH_ID}`;
 
 const V4_YTD = 411640000;
 const AST_TOTAL_SUPPLY = 5000000000000;
@@ -24,11 +23,13 @@ const SAST_V3_ADDRESS = "0x6d88B09805b90dad911E5C5A512eEDd984D6860B";
 const SAST_V4_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
 const BIGGEST_SWAP_MIN = 200000;
 
-export const stats = async () => {
+export const stats = async (args: string[], config: Config) => {
 	let dailies = [];
 	let lastId = Math.floor(Date.parse("2024-01-01T00:00:00") / 1000 / 86400);
 	let result: axios.AxiosResponse;
 	const todayId = Math.floor(Date.now() / 1000 / 86400);
+
+	const subgraphURL = `https://gateway.thegraph.com/api/${config.get("SUBGRAPH_KEY")}/subgraphs/id/${config.get("SUBGRAPH_ID")}`;
 
 	while (lastId < todayId) {
 		result = await axios.post(subgraphURL, {
@@ -90,14 +91,17 @@ export const stats = async () => {
 
 	const { tokens } = await getKnownTokens(ChainIds.MAINNET);
 	const provider = new ethers.providers.JsonRpcProvider(
-		getHTTPProviderURL(ChainIds.MAINNET, process.env.INFURA_PROJECT_ID),
+		getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID")),
 	);
+
 	const largestMonthly = await getLargestSwap(
+		subgraphURL,
 		Math.round(Date.now() / 1000 - 2.592e6),
 		tokens,
 		provider,
 	);
 	const largestWeekly = await getLargestSwap(
+		subgraphURL,
 		Math.round(Date.now() / 1000 - 604800),
 		tokens,
 		provider,
@@ -127,15 +131,15 @@ export const stats = async () => {
 🔹 **$${formatNumber(
 		monthlyVol,
 	)}** 30-day vol (${monthlyChangeLabel}) / $${formatNumber(monthlyFees)} fees
-🔥 **$${formatNumber(largestMonthly.senderAmountUSD)}** ${
-		largestMonthly.signerTokenInfo.symbol
-	}/${largestMonthly.senderTokenInfo.symbol} 30-day biggest swap
 🔹 **$${formatNumber(weeklyVol)}** 7-day vol (${weeklyChangeLabel}) / $${formatNumber(
 		weeklyFees,
 	)} fees
-🔥 **$${formatNumber(largestWeekly.senderAmountUSD)}** ${
+💥 **$${formatNumber(largestMonthly.senderAmountUSD)}** 30-day biggest swap (${
+		largestMonthly.signerTokenInfo.symbol
+	}/${largestMonthly.senderTokenInfo.symbol})
+💥 **$${formatNumber(largestWeekly.senderAmountUSD)}** 7-day biggest swap (${
 		largestWeekly.signerTokenInfo.symbol
-	}/${largestWeekly.senderTokenInfo.symbol} 7-day biggest swap
+	}/${largestWeekly.senderTokenInfo.symbol})
 🔒 **${formatNumber(
 		totalStakedString,
 	)} AST** (${percentStaked}%) staked by members
@@ -165,6 +169,7 @@ function formatNumber(num: number, precision = 2) {
 }
 
 async function getLargestSwap(
+	subgraphURL: string,
 	since: number,
 	tokens: any,
 	provider: ethers.providers.JsonRpcProvider,
