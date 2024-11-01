@@ -56,6 +56,7 @@ async function publish(type: string, evt: EventParams) {
 }
 
 async function startup() {
+	config.logger.info("Starting...");
 	// Initialize channels
 	config.logger.info(`Channels: ${channels.map((c) => c.name).join(", ")}`);
 	for (const channel in channels) {
@@ -97,6 +98,7 @@ async function startup() {
 
 async function restart() {
 	restarting = true;
+	config.logger.info("Stopping...");
 	// Close channels
 	for (const channel in channels) {
 		await channels[channel]?.close();
@@ -107,6 +109,7 @@ async function restart() {
 			await networks[chainId][listenerName]?.stop();
 		}
 	}
+	config.logger.info(`Done. Restarting in ${RECONNECT_DELAY / 1000}s.`);
 	// Restart after delay
 	setTimeout(() => {
 		restarting = false;
