@@ -94,11 +94,11 @@ async function start() {
 
 async function stop() {
 	for (const channel in channels) {
-		await channels[channel].close();
+		await channels[channel]?.close();
 	}
 	for (const chainId of Object.keys(networks)) {
 		for (const listenerName of Object.keys(listeners)) {
-			await networks[chainId][listenerName].stop();
+			await networks[chainId][listenerName]?.stop();
 		}
 	}
 }
