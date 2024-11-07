@@ -6,13 +6,11 @@ import type { SwapEventParams } from "../utils";
 let client: TwitterApi;
 
 export default class Twitter {
+	name = "Twitter";
 	config: Config;
+
 	constructor(config: Config) {
 		this.config = config;
-	}
-	async name() {
-		const username = (await client.v2.me()).data.username;
-		return `Twitter (${username})`;
 	}
 	async init() {
 		client = new TwitterApi({
