@@ -2,11 +2,11 @@
 	"name": "airswap-bot",
 	"version": "1.0.0",
 	"scripts": {
-		"build": "rm -rf ./build && tsc",
 		"dev": "ts-node src/index.ts | ./node_modules/.bin/bunyan",
+		"build": "rm -rf ./build && tsc",
+		"prod": "node ./build/index.js | ./node_modules/.bin/bunyan",
 		"docker:build": "docker build . -t airswap/bot",
 		"lint": "biome check --write",
-		"start": "node ./build/index.js | ./node_modules/.bin/bunyan",
 		"stats": "ts-node scripts/stats",
 		"makers": "ts-node scripts/makers",
 		"compliance": "ts-node scripts/compliance",
