@@ -12,17 +12,16 @@ import type Config from "../config";
 import { type SwapEventParams, friendlyNames, minifyAddress } from "../utils";
 
 export default class Discord {
+	name = "Discord";
 	client: Client;
 	swapsChannelId: string;
 	registryChannelId: string;
 	config: Config;
+
 	constructor(config: Config) {
 		this.config = config;
 		this.swapsChannelId = config.get("DISCORD_SWAPS_CHANNEL");
 		this.registryChannelId = config.get("DISCORD_EVENTS_CHANNEL");
-	}
-	async name() {
-		return `Discord (Swaps to ${this.swapsChannelId}, Registry to ${this.registryChannelId})`;
 	}
 	async init() {
 		return new Promise((resolve) => {

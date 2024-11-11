@@ -2,7 +2,6 @@ import * as poolDeploys from "@airswap/pool/deploys.js";
 import * as SwapContract from "@airswap/swap-erc20/build/contracts/SwapERC20.sol/SwapERC20.json";
 import * as swapDeploys from "@airswap/swap-erc20/deploys.js";
 import {
-	type FullSwapERC20,
 	chainNames,
 	findTokenByAddress,
 	findTokensBySymbol,
@@ -14,16 +13,16 @@ import {
 	toDecimalString,
 } from "@airswap/utils";
 import { commify } from "@ethersproject/units";
-import { Contract, type Event, type ethers } from "ethers";
+import { ethers } from "ethers";
 import type Config from "../config";
-import { type EventParams, type SwapEventParams, getValue } from "../utils";
+import { type SwapEventParams, getValue } from "../utils";
 import { defaultTokenInfo } from "../utils";
 
 export class SwapERC20 {
 	provider: ethers.providers.Provider;
 	publish: (type: string, params: any) => void;
 	config: Config;
-	contract: Contract;
+	contract: ethers.Contract;
 
 	constructor(
 		provider: ethers.providers.Provider,
@@ -38,7 +37,7 @@ export class SwapERC20 {
 	private listener = async (
 		nonce: string,
 		signerWallet: string,
-		event: Event,
+		event: ethers.Event,
 	) => {
 		const chainId = (await this.provider.getNetwork()).chainId;
 		const { tokens } = await getKnownTokens(chainId);
@@ -110,7 +109,7 @@ export class SwapERC20 {
 		}
 
 		const details: SwapEventParams = {
-			name: "SwapERC20",
+			name: event.event,
 			hash: `${transaction?.hash}`,
 			chainId,
 			contract: swapDeploys[chainId],
@@ -145,7 +144,7 @@ export class SwapERC20 {
 			throw new Error("SwapERC20: No contract deployed");
 		}
 		try {
-			this.contract = new Contract(
+			this.contract = new ethers.Contract(
 				swapDeploys[String(chainId)],
 				SwapContract.abi,
 				this.provider,
