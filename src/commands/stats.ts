@@ -8,7 +8,7 @@ import {
 import axios from "axios";
 import * as dotenv from "dotenv";
 import { BigNumber, FixedNumber, ethers } from "ethers";
-import { getHTTPProviderURL } from "../utils";
+import { formatNumber, getHTTPProviderURL } from "../utils";
 
 import erc20Abi from "erc-20-abi";
 import type Config from "../config";
@@ -148,25 +148,6 @@ export const stats = async (args: string[], config: Config) => {
 #BUIDL with AirSwap today!
     `;
 };
-
-function formatNumber(num: number, precision = 2) {
-	const map = [
-		{ suffix: "T", threshold: 1e12 },
-		{ suffix: "B", threshold: 1e9 },
-		{ suffix: "M", threshold: 1e6 },
-		{ suffix: "K", threshold: 1e3 },
-		{ suffix: "", threshold: 1 },
-	];
-
-	const found = map.find((x) => Math.abs(num) >= x.threshold);
-	if (found) {
-		const formatted = (num / found.threshold).toFixed(precision) + found.suffix;
-
-		return formatted;
-	}
-
-	return num;
-}
 
 async function getLargestSwap(
 	subgraphURL: string,
