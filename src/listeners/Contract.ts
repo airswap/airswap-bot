@@ -38,10 +38,15 @@ export class Contract {
 		this.abi = abi;
 	}
 
-	private handler = async (eventName: string, ...args: any[]) => {
+	private handler = async (...args: any[]) => {
 		const chainId = (await this.provider.getNetwork()).chainId;
-		const eventSpec = this.events[eventName];
 		const evt = args[args.length - 1];
+		this.config.logger.trace(
+			`[${chainId}] ${this.name}:${evt.event}`,
+			getReceiptUrl(chainId, evt.transactionHash),
+		);
+
+		const eventSpec = this.events[evt.event];
 		const details = eventSpec.params.reduce(
 			(acc: any, param: string, index: number) => {
 				acc[param] = args[index];
@@ -51,7 +56,7 @@ export class Contract {
 		);
 		this.publish(this.name, {
 			chainId,
-			name: eventName,
+			name: evt.event,
 			contract: this.name,
 			hash: evt.transactionHash,
 			description:
@@ -60,10 +65,6 @@ export class Contract {
 					: eventSpec.description,
 			details,
 		});
-		this.config.logger.trace(
-			`[${chainId}] ${this.name}:${eventName}`,
-			getReceiptUrl(chainId, evt.transactionHash),
-		);
 	};
 
 	async start() {

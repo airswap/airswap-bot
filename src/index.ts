@@ -120,7 +120,7 @@ process.on("uncaughtException", (err) => {
 			stop().then(() => setTimeout(start, RECONNECT_DELAY));
 			break;
 		default:
-			config.logger.error(err.message, "restarting in 10s...");
+			config.logger.error(err, "restarting in 10s...");
 			stop().then(() => setTimeout(start, RECONNECT_DELAY));
 			break;
 	}
