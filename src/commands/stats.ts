@@ -37,7 +37,7 @@ export const stats = async (args: string[], config: Config) => {
 			if (Number.parseInt(args[0])) {
 				interval = Number.parseInt(args[0]);
 			} else {
-				interval = 30;
+				interval = 7;
 			}
 	}
 	let dailies = [];
