@@ -1,5 +1,6 @@
 import {
 	ChainIds,
+	SECONDS_IN_DAY,
 	findTokenByAddress,
 	getKnownTokens,
 	getTokenInfo,
@@ -24,6 +25,21 @@ const SAST_V4_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
 const BIGGEST_SWAP_MIN = 200000;
 
 export const stats = async (args: string[], config: Config) => {
+	let interval = 30;
+	switch (args[0]) {
+		case "weekly":
+			interval = 7;
+			break;
+		case "monthly":
+			interval = 30;
+			break;
+		default:
+			if (Number.parseInt(args[0])) {
+				interval = Number.parseInt(args[0]);
+			} else {
+				interval = 30;
+			}
+	}
 	let dailies = [];
 	let lastId = Math.floor(Date.parse("2024-01-01T00:00:00") / 1000 / 86400);
 	let result: axios.AxiosResponse;
@@ -57,55 +73,67 @@ export const stats = async (args: string[], config: Config) => {
 			return total + Number(value.volume);
 		}, 0) + V4_YTD;
 
-	const monthlyVol = dailies.slice(0, 30).reduce((total: any, value: any) => {
-		return total + Number(value.volume);
-	}, 0);
-	const monthlyFees = dailies.slice(0, 30).reduce((total: any, value: any) => {
-		return total + Number(value.fees);
-	}, 0);
-	const lastMonthlyVol = dailies
-		.slice(30, 60)
+	const intervalVol = dailies
+		.slice(0, interval)
 		.reduce((total: any, value: any) => {
 			return total + Number(value.volume);
 		}, 0);
-	const weeklyVol = dailies.slice(0, 7).reduce((total: any, value: any) => {
-		return total + Number(value.volume);
-	}, 0);
-	const lastWeeklyVol = dailies
-		.slice(7, 14)
+	const intervalFees = dailies
+		.slice(0, interval)
+		.reduce((total: any, value: any) => {
+			return total + Number(value.fees);
+		}, 0);
+	const lastIntervalVol = dailies
+		.slice(interval, interval * 2)
 		.reduce((total: any, value: any) => {
 			return total + Number(value.volume);
 		}, 0);
-	const weeklyFees = dailies.slice(0, 7).reduce((total: any, value: any) => {
-		return total + Number(value.fees);
-	}, 0);
 
-	const monthlyChange = (monthlyVol / lastMonthlyVol - 1) * 100;
-	const weeklyChange = (weeklyVol / lastWeeklyVol - 1) * 100;
+	const intervalChange = (intervalVol / lastIntervalVol - 1) * 100;
 
-	let monthlyChangeLabel = `${monthlyChange.toFixed(2)}%`;
-	monthlyChangeLabel = (monthlyChange > 1 ? "+" : "") + monthlyChangeLabel;
-
-	let weeklyChangeLabel = `${weeklyChange.toFixed(2)}%`;
-	weeklyChangeLabel = (weeklyChange > 1 ? "+" : "") + weeklyChangeLabel;
+	let intervalChangeLabel = `${intervalChange.toFixed(2)}%`;
+	intervalChangeLabel = (intervalChange > 1 ? "+" : "") + intervalChangeLabel;
 
 	const { tokens } = await getKnownTokens(ChainIds.MAINNET);
 	const provider = new ethers.providers.JsonRpcProvider(
 		getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID")),
 	);
 
-	const largestMonthly = await getLargestSwap(
-		subgraphURL,
-		Math.round(Date.now() / 1000 - 2.592e6),
-		tokens,
-		provider,
-	);
-	const largestWeekly = await getLargestSwap(
-		subgraphURL,
-		Math.round(Date.now() / 1000 - 604800),
-		tokens,
-		provider,
-	);
+	result = await axios.post(subgraphURL, {
+		query: `{
+        swapERC20S(
+          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${interval * SECONDS_IN_DAY}}
+        ) {
+          nonce
+          senderAmountUSD
+          signerToken {
+            id
+          }
+          senderToken {
+            id
+          }
+        }
+      }`,
+	});
+	let biggest = {
+		senderAmountUSD: 0,
+		senderToken: "",
+		signerToken: "",
+	};
+	result.data.data.swapERC20S.map((value: any) => {
+		if (Number(value.senderAmountUSD) > Number(biggest.senderAmountUSD)) {
+			biggest = value;
+		}
+	});
+
+	let senderTokenInfo = findTokenByAddress(biggest.senderToken, tokens);
+	if (!senderTokenInfo) {
+		senderTokenInfo = await getTokenInfo(provider, biggest.senderToken);
+	}
+	let signerTokenInfo = findTokenByAddress(biggest.signerToken, tokens);
+	if (!signerTokenInfo) {
+		signerTokenInfo = await getTokenInfo(provider, biggest.signerToken);
+	}
 
 	const stakingToken = new ethers.Contract(
 		stakingTokenAddresses[ChainIds.MAINNET],
@@ -126,70 +154,19 @@ export const stats = async (args: string[], config: Config) => {
 		.slice(0, 5);
 	const totalStakedString = totalStaked.div(10000).toNumber();
 
-	return `Mainnet Report (V5)
+	return `Mainnet Report (${interval}-day)
 
 🔹 **$${formatNumber(
-		monthlyVol,
-	)}** 30-day vol (${monthlyChangeLabel}) / $${formatNumber(monthlyFees)} fees
-🔹 **$${formatNumber(weeklyVol)}** 7-day vol (${weeklyChangeLabel}) / $${formatNumber(
-		weeklyFees,
-	)} fees
-💥 **$${formatNumber(largestMonthly.senderAmountUSD)}** 30-day biggest swap (${
-		largestMonthly.signerTokenInfo.symbol
-	}/${largestMonthly.senderTokenInfo.symbol})
-💥 **$${formatNumber(largestWeekly.senderAmountUSD)}** 7-day biggest swap (${
-		largestWeekly.signerTokenInfo.symbol
-	}/${largestWeekly.senderTokenInfo.symbol})
+		intervalVol,
+	)}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(intervalFees)} fees
+💥 **$${formatNumber(biggest.senderAmountUSD)}** ${interval}-day biggest swap (${
+		signerTokenInfo.symbol
+	}/${senderTokenInfo.symbol})
 🔒 **${formatNumber(
 		totalStakedString,
 	)} AST** (${percentStaked}%) staked by members
-🚀 **$${formatNumber(yearToDate)}** year-to-date
+🚀 **$${formatNumber(yearToDate)}** year-to-date vol
 
 #BUIDL with AirSwap today!
     `;
 };
-
-async function getLargestSwap(
-	subgraphURL: string,
-	since: number,
-	tokens: any,
-	provider: ethers.providers.JsonRpcProvider,
-) {
-	const result = await axios.post(subgraphURL, {
-		query: `{
-        swapERC20S(
-          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${since}}
-        ) {
-          nonce
-          senderAmountUSD
-          signerToken {
-            id
-          }
-          senderToken {
-            id
-          }
-        }
-      }`,
-	});
-	let largest = {
-		senderAmountUSD: 0,
-		senderToken: "",
-		signerToken: "",
-	};
-	result.data.data.swapERC20S.map((value: any) => {
-		if (Number(value.senderAmountUSD) > Number(largest.senderAmountUSD)) {
-			largest = value;
-		}
-	});
-
-	let senderTokenInfo = findTokenByAddress(largest.senderToken, tokens);
-	if (!senderTokenInfo) {
-		senderTokenInfo = await getTokenInfo(provider, largest.senderToken);
-	}
-	let signerTokenInfo = findTokenByAddress(largest.signerToken, tokens);
-	if (!signerTokenInfo) {
-		signerTokenInfo = await getTokenInfo(provider, largest.signerToken);
-	}
-
-	return { ...largest, senderTokenInfo, signerTokenInfo };
-}

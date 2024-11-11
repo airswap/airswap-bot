@@ -4,6 +4,6 @@ import Config from "../src/config";
 const config = new Config();
 
 async function main() {
-	console.log(await stats([], config));
+	console.log(await stats(["1"], config));
 }
 main();
