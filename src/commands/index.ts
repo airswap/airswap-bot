@@ -2,6 +2,7 @@ import type Config from "../config";
 import { compliance } from "./compliance";
 import { inspect } from "./inspect";
 import { launch } from "./launch";
+import { makers } from "./makers";
 import { stats } from "./stats";
 
 const handlers = {
@@ -9,6 +10,7 @@ const handlers = {
 	compliance,
 	stats,
 	launch,
+	makers,
 };
 
 export const handleCommand = async (
