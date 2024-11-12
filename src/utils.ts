@@ -43,8 +43,8 @@ export const friendlyNames: any = {
 };
 
 export type EventParams = {
-	name: string;
 	chainId: number;
+	name: string;
 	contract: string;
 	hash: string;
 	details?: Record<string, any>;

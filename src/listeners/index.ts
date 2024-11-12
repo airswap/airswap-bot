@@ -10,6 +10,7 @@ import * as RegistryContract from "@airswap/registry/build/contracts/Registry.so
 import * as registryDeploys from "@airswap/registry/deploys.js";
 import * as StakingContract from "@airswap/staking/build/contracts/Staking.sol/Staking.json";
 import * as stakingDeploys from "@airswap/staking/deploys.js";
+import { ADDRESS_ZERO } from "@airswap/utils";
 
 export * from "./SwapERC20";
 
@@ -21,13 +22,28 @@ export class Registry extends Contract {
 	) {
 		super(
 			"Registry",
-			[
-				"SetServerURL",
-				"AddTokens",
-				"RemoveTokens",
-				"AddProtocols",
-				"RemoveProtocols",
-			],
+			{
+				SetServerURL: {
+					description: "A server URL has been set",
+					params: ["staker", "url"],
+				},
+				AddTokens: {
+					description: "A server has added tokens",
+					params: ["staker", "tokens"],
+				},
+				RemoveTokens: {
+					description: "A server has removed tokens",
+					params: ["staker", "tokens"],
+				},
+				AddProtocols: {
+					description: "A server has added protocols",
+					params: ["staker", "protocols"],
+				},
+				RemoveProtocols: {
+					description: "A server has removed protocols",
+					params: ["staker", "protocols"],
+				},
+			},
 			registryDeploys,
 			RegistryContract.abi,
 			provider,
@@ -45,7 +61,27 @@ export class Delegate extends Contract {
 	) {
 		super(
 			"Delegate",
-			["DelegateSwap", "SetRule", "UnsetRule"],
+			{
+				DelegateSwap: {
+					description: "A delegate swap has been completed",
+					params: ["nonce", "signer"],
+				},
+				SetRule: {
+					description: "A delegate rule has been set",
+					params: [
+						"senderWallet",
+						"senderToken",
+						"senderAmount",
+						"signerToken",
+						"signerAmount",
+						"expiry",
+					],
+				},
+				UnsetRule: {
+					description: "A delegate rule has been unset",
+					params: ["senderWallet", "senderToken", "signerToken"],
+				},
+			},
 			delegateDeploys,
 			DelegateContract.abi,
 			provider,
@@ -63,7 +99,17 @@ export class Staking extends Contract {
 	) {
 		super(
 			"Staking",
-			["Transfer"],
+			{
+				Transfer: {
+					description: (params: string[]) => {
+						if (params[0] === ADDRESS_ZERO) {
+							return "A member has staked AST";
+						}
+						return "A member has unstaked AST";
+					},
+					params: ["from", "to", "tokens"],
+				},
+			},
 			stakingDeploys,
 			StakingContract.abi,
 			provider,
@@ -81,7 +127,16 @@ export class Pool extends Contract {
 	) {
 		super(
 			"Pool",
-			["Enable", "Withdraw"],
+			{
+				Enable: {
+					description: "A tree has been enabled",
+					params: ["tree", "root"],
+				},
+				Withdraw: {
+					description: "A withdraw has been completed",
+					params: ["account", "recipient", "token", "value", "amount"],
+				},
+			},
 			poolDeploys,
 			PoolContract.abi,
 			provider,
