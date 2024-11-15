@@ -5,6 +5,13 @@ import { computePoolAddress } from "@uniswap/v3-sdk";
 import { Token } from "@uniswap/sdk-core";
 import { FeeAmount } from "@uniswap/v3-sdk";
 
+import path from "node:path";
+import bunyan from "bunyan";
+import * as dotenv from "dotenv";
+import fs from "fs-extra";
+
+dotenv.config();
+
 import {
 	type TokenInfo,
 	apiUrls,
@@ -261,5 +268,75 @@ export async function getValue(
 			);
 		} catch (e1) {}
 		return 0;
+	}
+}
+
+const configPath = path.join(__dirname, "config.json");
+if (!fs.pathExistsSync(configPath)) {
+	fs.outputJsonSync(configPath, {
+		PUBLISHING: true,
+		BIG_SWAP_MIN_VALUE: 100000,
+	});
+}
+const config = fs.readJsonSync(configPath);
+
+export class Config {
+	vars: any;
+	logger: bunyan;
+	constructor() {
+		this.vars = {
+			PUBLISHING: false,
+			BIG_SWAP_MIN_VALUE: 0,
+			INFURA_PROVIDER_ID: "",
+			DISCORD_TOKEN: "",
+			DISCORD_SWAPS_CHANNEL: "",
+			DISCORD_EVENTS_CHANNEL: "",
+			TWITTER_USER_ID: "",
+			TWITTER_APP_KEY: "",
+			TWITTER_APP_SECRET: "",
+			TWITTER_ACCESS_TOKEN: "",
+			TWITTER_ACCESS_SECRET: "",
+			SUBGRAPH_KEY: "",
+			SUBGRAPH_ID: "",
+			EXEMPTIONS: "",
+			TEST_SENDER_WALLET: "",
+			ALCHEMY_KEYS_1: "",
+			ALCHEMY_KEYS_137: "",
+			ALCHEMY_KEYS_11155111: "",
+			REPO_URL: "",
+			IPFS_URL: "",
+			STORAGE_SERVER_URL: "",
+			INFURA_PROJECT_ID: "",
+			INFURA_PROJECT_SECRET: "",
+		};
+
+		for (const key in this.vars) {
+			this.vars[key] = process.env[key] || config[key];
+		}
+		this.logger = bunyan.createLogger({
+			name: "airswapbot",
+			streams: [
+				{
+					level: "trace",
+					stream: process.stdout,
+				},
+				{
+					level: "debug",
+					path: "/var/tmp/airswapbot.json",
+				},
+			],
+		});
+	}
+
+	get(key: string) {
+		return this.vars[key];
+	}
+
+	set(key: string, value: any) {
+		this.vars[key] = value;
+		if (key in config) {
+			config[key] = value;
+			fs.writeJsonSync(configPath, config);
+		}
 	}
 }

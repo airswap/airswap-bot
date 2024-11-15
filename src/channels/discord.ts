@@ -8,8 +8,12 @@ import {
 	GatewayIntentBits,
 } from "discord.js";
 import { handleCommand } from "../commands";
-import type Config from "../config";
-import { type SwapEventParams, friendlyNames, minifyAddress } from "../utils";
+import {
+	type Config,
+	type SwapEventParams,
+	friendlyNames,
+	minifyAddress,
+} from "../utils";
 
 export default class Discord {
 	name = "Discord";

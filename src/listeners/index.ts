@@ -1,5 +1,5 @@
 import type { ethers } from "ethers";
-import type Config from "../config";
+import type { Config } from "../utils";
 import { Contract } from "./Contract";
 
 import * as DelegateContract from "@airswap/delegate/build/contracts/Delegate.sol/Delegate.json";

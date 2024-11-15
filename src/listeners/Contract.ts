@@ -1,7 +1,6 @@
 import { chainNames, getReceiptUrl } from "@airswap/utils";
 import { ethers } from "ethers";
-import type Config from "../config";
-import type { EventParams } from "../utils";
+import type { Config, EventParams } from "../utils";
 
 type EventsSpec = {
 	[key: string]: {

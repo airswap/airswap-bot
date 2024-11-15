@@ -1,5 +1,5 @@
 import { stats } from "../src/commands/stats";
-import Config from "../src/config";
+import { Config } from "../src/utils";
 
 const config = new Config();
 

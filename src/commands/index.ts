@@ -1,4 +1,4 @@
-import type Config from "../config";
+import type { Config } from "../utils";
 import { compliance } from "./compliance";
 import { inspect } from "./inspect";
 import { launch } from "./launch";

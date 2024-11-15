@@ -14,9 +14,12 @@ import {
 } from "@airswap/utils";
 import { commify } from "@ethersproject/units";
 import { ethers } from "ethers";
-import type Config from "../config";
-import { type SwapEventParams, getValue } from "../utils";
-import { defaultTokenInfo } from "../utils";
+import {
+	type Config,
+	type SwapEventParams,
+	defaultTokenInfo,
+	getValue,
+} from "../utils";
 
 export class SwapERC20 {
 	provider: ethers.providers.Provider;

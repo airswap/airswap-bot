@@ -9,7 +9,7 @@ import {
 import { Alchemy, Network } from "alchemy-sdk";
 import { create, globSource } from "ipfs-http-client";
 import last from "it-last";
-import type Config from "../config";
+import type { Config } from "../utils";
 
 const ALCHEMY_NETWORKS = {
 	1: Network.ETH_MAINNET,

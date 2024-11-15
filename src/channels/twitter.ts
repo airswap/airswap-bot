@@ -1,8 +1,7 @@
 import { getReceiptUrl } from "@airswap/utils";
 import { commify } from "@ethersproject/units";
 import { TwitterApi } from "twitter-api-v2";
-import type Config from "../config";
-import type { SwapEventParams } from "../utils";
+import type { Config, SwapEventParams } from "../utils";
 let client: TwitterApi;
 
 export default class Twitter {

@@ -8,10 +8,9 @@ import {
 import axios from "axios";
 import * as dotenv from "dotenv";
 import { BigNumber, FixedNumber, ethers } from "ethers";
-import { formatNumber, getHTTPProviderURL } from "../utils";
+import { type Config, formatNumber, getHTTPProviderURL } from "../utils";
 
 import erc20Abi from "erc-20-abi";
-import type Config from "../config";
 const erc20Interface = new ethers.utils.Interface(erc20Abi);
 
 dotenv.config();

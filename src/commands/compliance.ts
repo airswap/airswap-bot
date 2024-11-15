@@ -2,8 +2,7 @@ import * as RegistryContract from "@airswap/registry/build/contracts/Registry.so
 import * as registryDeploys from "@airswap/registry/deploys.js";
 import { ChainIds, ProtocolIds, chainNames } from "@airswap/utils";
 import { Contract, ethers } from "ethers";
-import type Config from "../config";
-import { getHTTPProviderURL } from "../utils";
+import { type Config, getHTTPProviderURL } from "../utils";
 import { inspect } from "./inspect";
 
 const USDC = "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";

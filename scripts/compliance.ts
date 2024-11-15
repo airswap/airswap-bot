@@ -1,5 +1,5 @@
 import { compliance } from "../src/commands/compliance";
-import Config from "../src/config";
+import { Config } from "../src/utils";
 
 const config = new Config();
 

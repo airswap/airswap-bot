@@ -1,5 +1,5 @@
 import { makers } from "../src/commands/makers";
-import Config from "../src/config";
+import { Config } from "../src/utils";
 
 const config = new Config();
 

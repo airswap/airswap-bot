@@ -2,7 +2,7 @@ import * as swapDeploys from "@airswap/swap-erc20/deploys.js";
 import { ChainIds, isValidOrderERC20 } from "@airswap/utils";
 import * as jayson from "jayson";
 import validUrl from "valid-url";
-import type Config from "../config";
+import type { Config } from "../utils";
 
 const REQUEST_TIMEOUT = 10000;
 

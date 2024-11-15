@@ -2,9 +2,9 @@ import { chainNames, getReceiptUrl } from "@airswap/utils";
 import { ethers } from "ethers";
 import Discord from "./channels/discord";
 import Twitter from "./channels/twitter";
-import Config from "./config";
 import * as listeners from "./listeners";
 import {
+	Config,
 	type EventParams,
 	type SwapEventParams,
 	createSocketProvider,
