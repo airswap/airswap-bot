@@ -16,7 +16,7 @@ const erc20Interface = new ethers.utils.Interface(erc20Abi);
 
 dotenv.config();
 
-const V4_YTD = 411640000;
+const JANUARY_FIRST = "2025-01-01T00:00:00";
 const AST_TOTAL_SUPPLY = 5000000000000;
 const TREASURY_ADDRESS = "0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534";
 const SAST_V3_ADDRESS = "0x6d88B09805b90dad911E5C5A512eEDd984D6860B";
@@ -40,7 +40,7 @@ export const stats = async (args: string[], config: Config) => {
 			}
 	}
 	let dailies = [];
-	let lastId = Math.floor(Date.parse("2024-01-01T00:00:00") / 1000 / 86400);
+	let lastId = Math.floor(Date.parse(JANUARY_FIRST) / 1000 / 86400);
 	let result: axios.AxiosResponse;
 	const todayId = Math.floor(Date.now() / 1000 / 86400);
 
@@ -70,7 +70,7 @@ export const stats = async (args: string[], config: Config) => {
 	const yearToDate =
 		dailies.reduce((total: any, value: any) => {
 			return total + Number(value.volume);
-		}, 0) + V4_YTD;
+		}, 0);
 
 	const intervalVol = dailies
 		.slice(0, interval)
