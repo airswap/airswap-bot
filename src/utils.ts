@@ -34,6 +34,8 @@ const STABLES = {
 	DAI: 1,
 };
 
+const WETH = "WETH"
+
 export const defaultTokenInfo = {
 	chainId: 0,
 	name: "?",
@@ -239,6 +241,32 @@ export async function getValue(
 	if (senderTokenInfo.symbol in STABLES) {
 		return Number(
 			toDecimalString(senderAmount.toString(), senderTokenInfo.decimals),
+		);
+	}
+	if (signerTokenInfo.symbol === WETH) {
+		return Number(
+			toDecimalString(
+				await getQuote(
+					provider,
+					signerTokenInfo,
+					signerAmount.toString(),
+					toToken,
+				),
+				toToken.decimals,
+			),
+		);
+	}
+	if (senderTokenInfo.symbol === WETH) {
+		return Number(
+			toDecimalString(
+				await getQuote(
+					provider,
+					senderTokenInfo,
+					senderAmount.toString(),
+					toToken,
+				),
+				toToken.decimals,
+			),
 		);
 	}
 	try {
