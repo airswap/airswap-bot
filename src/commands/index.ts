@@ -30,6 +30,7 @@ export const handleCommand = async (
 				content: `\`${JSON.stringify({
 					PUBLISHING: config.get("PUBLISHING"),
 					BIG_SWAP_MIN_VALUE: config.get("BIG_SWAP_MIN_VALUE"),
+					BIG_SWAP_MAX_VALUE: config.get("BIG_SWAP_MAX_VALUE"),
 				})}\``,
 			});
 			break;

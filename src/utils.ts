@@ -27,6 +27,9 @@ const QUOTER_CONTRACT_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 const EXPECTED_PONG_BACK = 15000;
 const KEEP_ALIVE_CHECK_INTERVAL = 7500;
 
+const DEFAULT_BIG_SWAP_MIN_VALUE = 100000;
+const DEFAULT_BIG_SWAP_MAX_VALUE = 100000000;
+
 const STABLES = {
 	USDT: 1,
 	USDC: 1,
@@ -303,7 +306,8 @@ const configPath = path.join(__dirname, "config.json");
 if (!fs.pathExistsSync(configPath)) {
 	fs.outputJsonSync(configPath, {
 		PUBLISHING: true,
-		BIG_SWAP_MIN_VALUE: 100000,
+		BIG_SWAP_MIN_VALUE: DEFAULT_BIG_SWAP_MIN_VALUE,
+		BIG_SWAP_MAX_VALUE: DEFAULT_BIG_SWAP_MAX_VALUE,
 	});
 }
 const config = fs.readJsonSync(configPath);
@@ -314,7 +318,8 @@ export class Config {
 	constructor() {
 		this.vars = {
 			PUBLISHING: false,
-			BIG_SWAP_MIN_VALUE: 0,
+			BIG_SWAP_MIN_VALUE: DEFAULT_BIG_SWAP_MIN_VALUE,
+			BIG_SWAP_MAX_VALUE: DEFAULT_BIG_SWAP_MAX_VALUE,
 			INFURA_PROVIDER_ID: "",
 			DISCORD_TOKEN: "",
 			DISCORD_SWAPS_CHANNEL: "",
