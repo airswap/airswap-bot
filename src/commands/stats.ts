@@ -67,10 +67,9 @@ export const stats = async (args: string[], config: Config) => {
 
 	dailies = dailies.reverse();
 
-	const yearToDate =
-		dailies.reduce((total: any, value: any) => {
-			return total + Number(value.volume);
-		}, 0);
+	const yearToDate = dailies.reduce((total: any, value: any) => {
+		return total + Number(value.volume);
+	}, 0);
 
 	const intervalVol = dailies
 		.slice(0, interval)

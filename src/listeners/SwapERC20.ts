@@ -136,7 +136,10 @@ export class SwapERC20 {
 				)}`,
 		);
 
-		if (swapValue >= +this.config.get("BIG_SWAP_MIN_VALUE") && swapValue <= +this.config.get("BIG_SWAP_MAX_VALUE")) {
+		if (
+			swapValue >= +this.config.get("BIG_SWAP_MIN_VALUE") &&
+			swapValue <= +this.config.get("BIG_SWAP_MAX_VALUE")
+		) {
 			this.publish("SwapERC20", details);
 		}
 	};

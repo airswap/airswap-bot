@@ -37,7 +37,7 @@ const STABLES = {
 	DAI: 1,
 };
 
-const WETH = "WETH"
+const WETH = "WETH";
 
 export const defaultTokenInfo = {
 	chainId: 0,
@@ -78,18 +78,18 @@ export type ReportDetails = {
 
 export function getHTTPProviderURL(
 	chainId: number,
-	INFURA_PROVIDER_ID: string,
+	INFURA_PROJECT_ID: string,
 ): string {
 	let apiUrl = apiUrls[chainId];
 	if (apiUrl.indexOf("infura.io") !== -1) {
-		apiUrl += `/${INFURA_PROVIDER_ID}`;
+		apiUrl += `/${INFURA_PROJECT_ID}`;
 	}
 	return apiUrl;
 }
 
 export function getWebSocketProviderURL(
 	chainId: number,
-	INFURA_PROVIDER_ID: string,
+	INFURA_PROJECT_ID: string,
 ): string {
 	return;
 }
@@ -121,13 +121,13 @@ export function formatNumber(num: number, precision = 2) {
 
 export function createSocketProvider(
 	chainId: number,
-	INFURA_PROVIDER_ID: string,
+	INFURA_PROJECT_ID: string,
 ) {
 	const provider: ethers.providers.WebSocketProvider =
 		new ethers.providers.WebSocketProvider(
 			`wss://${chainLabels[
 				chainId
-			].toLowerCase()}.infura.io/ws/v3/${INFURA_PROVIDER_ID}`,
+			].toLowerCase()}.infura.io/ws/v3/${INFURA_PROJECT_ID}`,
 		);
 	let pingTimeout: NodeJS.Timeout;
 	let keepAliveInterval: ReturnType<typeof setInterval> | undefined;
@@ -320,7 +320,6 @@ export class Config {
 			PUBLISHING: false,
 			BIG_SWAP_MIN_VALUE: DEFAULT_BIG_SWAP_MIN_VALUE,
 			BIG_SWAP_MAX_VALUE: DEFAULT_BIG_SWAP_MAX_VALUE,
-			INFURA_PROVIDER_ID: "",
 			DISCORD_TOKEN: "",
 			DISCORD_SWAPS_CHANNEL: "",
 			DISCORD_EVENTS_CHANNEL: "",

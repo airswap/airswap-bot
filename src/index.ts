@@ -66,14 +66,14 @@ async function startup() {
 	config.logger.info("Providers: HTTP", HTTP_PROVIDERS, "WS", WS_PROVIDERS);
 	for (const chainId of HTTP_PROVIDERS) {
 		networks[chainId] = new ethers.providers.JsonRpcProvider(
-			getHTTPProviderURL(chainId, config.get("INFURA_PROVIDER_ID")),
+			getHTTPProviderURL(chainId, config.get("INFURA_PROJECT_ID")),
 		);
 	}
 	// Create WebSocket providers
 	for (const chainId of WS_PROVIDERS) {
 		networks[chainId] = createSocketProvider(
 			chainId,
-			config.get("INFURA_PROVIDER_ID"),
+			config.get("INFURA_PROJECT_ID"),
 		);
 	}
 	// Start listeners on all networks
