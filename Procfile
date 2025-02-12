@@ -1,0 +1,1 @@
+worker: node ./build/index.js | ./node_modules/.bin/bunyan
