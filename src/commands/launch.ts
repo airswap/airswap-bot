@@ -15,6 +15,7 @@ const ALCHEMY_NETWORKS = {
 	1: Network.ETH_MAINNET,
 	137: Network.MATIC_MAINNET,
 	11155111: Network.ETH_SEPOLIA,
+	8453: Network.BASE_MAINNET,
 };
 
 export const launch = async (args: string[], config: Config) => {
@@ -55,7 +56,7 @@ export const launch = async (args: string[], config: Config) => {
 		return `Sorry, I'm not familiar with the ${args[0]} chain. I support mainnet, polygon, and sepolia.`;
 	}
 	if (!(chainId in ALCHEMY_NETWORKS)) {
-		return `Sorry, ${args[0]} is not supported yet. I support mainnet, polygon, and sepolia.`;
+		return `Sorry, ${args[0]} is not supported yet. I support mainnet, base, polygon, and sepolia.`;
 	}
 	const settings = {
 		apiKey: config.get(`ALCHEMY_KEYS_${chainId}`),

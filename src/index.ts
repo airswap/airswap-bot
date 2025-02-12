@@ -1,4 +1,4 @@
-import { chainNames, getReceiptUrl } from "@airswap/utils";
+import { ChainIds, chainNames, getReceiptUrl } from "@airswap/utils";
 import { ethers } from "ethers";
 import Discord from "./channels/discord";
 import Twitter from "./channels/twitter";
@@ -11,8 +11,14 @@ import {
 	getHTTPProviderURL,
 } from "./utils";
 
-const HTTP_PROVIDERS = [137, 43114];
-const WS_PROVIDERS = [1];
+const HTTP_PROVIDERS = [
+	ChainIds.LINEA,
+	ChainIds.POLYGON,
+	ChainIds.BASE,
+	ChainIds.AVALANCHE,
+	ChainIds.BSC,
+];
+const WS_PROVIDERS = [ChainIds.MAINNET];
 const RECONNECT_DELAY = 10000;
 
 const config = new Config();
