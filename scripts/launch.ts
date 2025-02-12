@@ -6,7 +6,7 @@ const config = new Config();
 async function main() {
 	console.log(
 		await launch(
-			["mainnet", "0x451Eed19DcD5325760E08be6ABEb795913d3263a", "eth"],
+			["sepolia", "0x93d2d57f295afde8b049c1210fb0aad072790b73", "eth"],
 			config,
 		),
 	);

@@ -47,7 +47,7 @@ export const launch = async (args: string[], config: Config) => {
 
 	const chainId = ChainIds[args[0].toUpperCase()];
 	const collectionToken = args[1];
-	const currencySymbol = args[2];
+	const currencySymbol = (args[2] || "ETH").toUpperCase();
 
 	// VALIDATE
 
