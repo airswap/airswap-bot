@@ -1,0 +1,5 @@
+curl
+unzip
+ca-certificates
+nodejs
+npm

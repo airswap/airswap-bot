@@ -14,8 +14,8 @@ import type { Config } from "../utils";
 const ALCHEMY_NETWORKS = {
 	1: Network.ETH_MAINNET,
 	137: Network.MATIC_MAINNET,
-	11155111: Network.ETH_SEPOLIA,
 	8453: Network.BASE_MAINNET,
+	11155111: Network.ETH_SEPOLIA,
 };
 
 export const launch = async (args: string[], config: Config) => {
@@ -23,24 +23,49 @@ export const launch = async (args: string[], config: Config) => {
 	const folder = "airswap-marketplace";
 	const stdio = "inherit";
 
+	// Setup node version environment
+	const nodeEnv = {
+		...process.env,
+		N_PREFIX: "/tmp/n",
+		PATH: `/tmp/n/bin:${process.env.PATH}`,
+		NODE_OPTIONS: "--max-old-space-size=384",
+	};
+
+	// Only download and install if the repository doesn't exist
 	if (!fs.existsSync(`${cwd}/${folder}`)) {
-		execSync(`git clone ${config.get("REPO_URL")}`, {
-			cwd,
-			stdio,
-		});
-		execSync("yarn", {
-			cwd: `${cwd}/${folder}`,
-			stdio,
-		});
-	} else {
-		const res = execSync("git pull", {
-			cwd: `${cwd}/${folder}`,
-		}).toString();
-		if (res !== "Already up to date.") {
-			execSync("yarn", {
-				cwd: `${cwd}/${folder}`,
-				stdio,
-			});
+		try {
+			// Install Node.js
+			execSync("npm install -g n --no-update-notifier", { stdio });
+			execSync("n 18.16.0", { stdio, env: nodeEnv });
+
+			// Get repository name from URL
+			const repoPath = config
+				.get("REPO_URL")
+				.replace("https://github.com/", "")
+				.replace(".git", "");
+
+			const downloadUrl = `https://codeload.github.com/${repoPath}/zip/main`;
+
+			execSync(`curl -s -L "${downloadUrl}" -o ${folder}.zip`, { cwd, stdio });
+			execSync(`unzip -q ${folder}.zip`, { cwd, stdio });
+
+			// Find the extracted folder name
+			const extractedFolder = fs
+				.readdirSync(cwd)
+				.find((f) => f.endsWith("-main"));
+
+			if (!extractedFolder) {
+				throw new Error("Could not find extracted folder");
+			}
+
+			execSync(`mv "${extractedFolder}" "${folder}"`, { cwd, stdio });
+			execSync(`rm ${folder}.zip`, { cwd, stdio });
+
+			// Install dependencies
+			await installDependencies(`${cwd}/${folder}`, nodeEnv);
+		} catch (error) {
+			console.error("Failed to download and install dependencies:", error);
+			return "Failed to download and install dependencies";
 		}
 	}
 
@@ -53,7 +78,7 @@ export const launch = async (args: string[], config: Config) => {
 	// VALIDATE
 
 	if (!chainId) {
-		return `Sorry, I'm not familiar with the ${args[0]} chain. I support mainnet, polygon, and sepolia.`;
+		return `Sorry, I'm not familiar with the ${args[0]} chain. I support mainnet, base, polygon, and sepolia.`;
 	}
 	if (!(chainId in ALCHEMY_NETWORKS)) {
 		return `Sorry, ${args[0]} is not supported yet. I support mainnet, base, polygon, and sepolia.`;
@@ -73,7 +98,7 @@ export const launch = async (args: string[], config: Config) => {
 	}
 
 	if (token.tokenType !== "ERC721" && token.tokenType !== "ERC1155") {
-		return `Sorry, this token doesn't look like an ERC721 or ERC1155.`;
+		return `Sorry, this token doesn't look like an ERC721 or ERC1155. ${token.tokenType}`;
 	}
 
 	let currencyToken = {
@@ -112,10 +137,12 @@ export const launch = async (args: string[], config: Config) => {
 
 	// GEN BUILD
 
-	execSync("yarn build", {
-		cwd: `${cwd}/${folder}`,
-		stdio,
-	});
+	try {
+		await buildProject(`${cwd}/${folder}`, nodeEnv);
+	} catch (error) {
+		console.error("Build failed:", error);
+		return "Sorry, there was a problem building the marketplace.";
+	}
 
 	// DEPLOY
 
@@ -124,26 +151,30 @@ export const launch = async (args: string[], config: Config) => {
 		infuraProjectSecret: config.get("INFURA_PROJECT_SECRET"),
 	});
 
+	const buildDir = `${cwd}/${folder}/build`;
 	let cid: any;
 	try {
+		if (!fs.existsSync(buildDir)) {
+			throw new Error("Build directory not found");
+		}
+
+		// Log build directory contents for debugging
+		console.log("Build directory contents:", fs.readdirSync(buildDir));
+
 		cid = await upload(api, {
 			pin: true,
-			path: `${cwd}/${folder}/build/`,
-			pattern: "**/*",
+			path: buildDir,
+			pattern: "**/*", // Include all files and subdirectories
 		});
 	} catch (e) {
-		console.error(e);
+		console.error("Upload error:", e);
 		return "Sorry, there was a problem uploading to IPFS.";
 	}
 
 	const options = { method: "GET", headers: { accept: "application/json" } };
+	const ownerMetadataUrl = `https://${settings.network}.g.alchemy.com/nft/v3/${settings.apiKey}/getOwnersForContract?contractAddress=${collectionToken}&withTokenBalances=false`;
 
-	const { owners } = await (
-		await fetch(
-			`https://eth-mainnet.g.alchemy.com/nft/v3/${settings.apiKey}/getOwnersForContract?contractAddress=${collectionToken}&withTokenBalances=false`,
-			options,
-		)
-	).json();
+	const { owners } = await (await fetch(ownerMetadataUrl, options)).json();
 
 	if (owners[0]) {
 		return `Here ya go: ${config.get("IPFS_URL")}${cid}/#/profile/${owners[0]}`;
@@ -152,7 +183,7 @@ export const launch = async (args: string[], config: Config) => {
 };
 
 async function builder(options) {
-	const { infuraProjectId, infuraProjectSecret, headers, timeout } = options;
+	const { infuraProjectId, infuraProjectSecret, headers } = options;
 	if (!infuraProjectId) {
 		throw new Error("[infura] ProjectId is empty. (input `infuraProjectId`)");
 	}
@@ -175,7 +206,7 @@ async function builder(options) {
 			...headers,
 			authorization: `Basic ${token}`,
 		},
-		timeout,
+		timeout: 300000, // 5 minutes timeout
 	});
 }
 
@@ -186,4 +217,91 @@ async function upload(api, options) {
 	);
 	if (!directory.cid) throw new Error("Content hash is not found.");
 	return directory.cid.toString();
+}
+
+async function installDependencies(buildPath: string, env: any) {
+	const phases = [
+		{
+			// Install project dependencies first, including devDependencies
+			cmd: "yarn install --production=false",
+			options: {
+				...env,
+				NODE_OPTIONS: "--max-old-space-size=256",
+				BABEL_ENV: "development",
+				NODE_ENV: "development",
+			},
+		},
+		{
+			// Install missing build dependencies
+			cmd: "yarn add autoprefixer@9.0.2 postcss-cli postcss-import@^12.0.1",
+			options: {
+				...env,
+				NODE_OPTIONS: "--max-old-space-size=256",
+				BABEL_ENV: "development",
+				NODE_ENV: "development",
+			},
+		},
+	];
+
+	for (const phase of phases) {
+		try {
+			execSync(phase.cmd, {
+				cwd: buildPath,
+				stdio: "inherit",
+				env: phase.options,
+			});
+		} catch (error) {
+			console.error(`Installation failed: ${phase.cmd}`, error);
+			throw error;
+		}
+	}
+}
+
+async function buildProject(buildPath: string, env: any) {
+	const phases = [
+		{
+			// Clean and optimize before build
+			cmd: "yarn cache clean && rm -rf node_modules/.cache",
+			options: {
+				...env,
+				BABEL_ENV: "production",
+				NODE_ENV: "production",
+			},
+		},
+		{
+			// Production build with optimizations
+			cmd: "yarn build",
+			options: {
+				...env,
+				NODE_OPTIONS: "--max-old-space-size=384",
+				GENERATE_SOURCEMAP: "false",
+				INLINE_RUNTIME_CHUNK: "false",
+				IMAGE_INLINE_SIZE_LIMIT: "0",
+				TSC_COMPILE_ON_ERROR: "true",
+				SKIP_PREFLIGHT_CHECK: "true",
+				DISABLE_ESLINT_PLUGIN: "true",
+				BABEL_ENV: "production",
+				NODE_ENV: "production",
+				CI: "true",
+				SKIP_TYPE_CHECK: "true",
+				SKIP_DEPENDENCY_CHECK: "true",
+				FORCE: "true",
+				BROWSERSLIST_IGNORE_OLD_DATA: "true",
+				DISABLE_NEW_JSX_TRANSFORM: "false",
+			},
+		},
+	];
+
+	for (const phase of phases) {
+		try {
+			execSync(phase.cmd, {
+				cwd: buildPath,
+				stdio: "inherit",
+				env: phase.options,
+			});
+		} catch (error) {
+			console.error(`Build failed: ${phase.cmd}`, error);
+			throw error;
+		}
+	}
 }

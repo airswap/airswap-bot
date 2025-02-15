@@ -9,7 +9,6 @@ const handlers = {
 	inspect,
 	compliance,
 	stats,
-	launch,
 	makers,
 };
 
@@ -48,9 +47,11 @@ export const handleCommand = async (
 			if (command.trim() in handlers) {
 				try {
 					message.react("👌");
-					const result = await handlers[command.trim()](args, config);
-					message.reply({ content: result, fetchReply: true });
-					config.logger.info(`[Response] ${result}`);
+					setTimeout(async () => {
+						const result = await handlers[command.trim()](args, config);
+						message.reply({ content: result, fetchReply: true });
+						config.logger.info(`[Response] ${result}`);
+					}, 1000);
 				} catch (e: any) {
 					message.reply({
 						content: `Had a problem with command: ${JSON.stringify(e.message)}`,

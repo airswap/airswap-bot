@@ -97,10 +97,12 @@ export const stats = async (args: string[], config: Config) => {
 		getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID")),
 	);
 
+	const lastIntervalStart = Math.floor(Date.now() / 1000) - SECONDS_IN_DAY * interval;
+
 	result = await axios.post(subgraphURL, {
 		query: `{
         swapERC20S(
-          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${interval * SECONDS_IN_DAY}}
+          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${lastIntervalStart}}
         ) {
           nonce
           senderAmountUSD
