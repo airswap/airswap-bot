@@ -21,7 +21,6 @@ const AST_TOTAL_SUPPLY = 5000000000000;
 const TREASURY_ADDRESS = "0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534";
 const SAST_V3_ADDRESS = "0x6d88B09805b90dad911E5C5A512eEDd984D6860B";
 const SAST_V4_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
-const BIGGEST_SWAP_MIN = 200000;
 
 export const stats = async (args: string[], config: Config) => {
 	let interval = 30;
@@ -102,7 +101,7 @@ export const stats = async (args: string[], config: Config) => {
 	result = await axios.post(subgraphURL, {
 		query: `{
         swapERC20S(
-          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${lastIntervalStart}}
+          where: {senderAmountUSD_gt:${Number(config.get("BIG_SWAP_MIN_VALUE"))} blockTimestamp_gt:${lastIntervalStart}}
         ) {
           nonce
           senderAmountUSD
