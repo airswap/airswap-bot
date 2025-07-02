@@ -88,12 +88,16 @@ export class Contract {
 
 	async stop() {
 		try {
-			for (const eventName in this.events) {
-				if (this.contract) this.contract.off(eventName, this.handler);
+			if (this.contract) {
+				for (const eventName in this.events) {
+					this.contract.off(eventName, this.handler);
+				}
+				// Clear contract reference to help with garbage collection
+				this.contract = null;
 			}
 		} catch (e: any) {
 			this.config.logger.error(
-				`${this.name}: problem removing SwapERC20 event subscription`,
+				`${this.name}: problem removing event subscriptions`,
 				e.message,
 			);
 		}

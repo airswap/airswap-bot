@@ -132,24 +132,70 @@ export function createSocketProvider(
 	let pingTimeout: NodeJS.Timeout;
 	let keepAliveInterval: ReturnType<typeof setInterval> | undefined;
 
+	// Add cleanup function to provider for proper disposal
+	(provider as any).cleanup = () => {
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = undefined;
+		}
+		if (pingTimeout) {
+			clearTimeout(pingTimeout);
+			pingTimeout = undefined;
+		}
+		if (
+			provider._websocket &&
+			provider._websocket.readyState === provider._websocket.OPEN
+		) {
+			provider._websocket.close();
+		}
+	};
+
 	provider._websocket.on("open", () => {
 		keepAliveInterval = setInterval(() => {
-			provider._websocket.ping();
-			pingTimeout = setTimeout(() => {
-				provider._websocket.terminate();
-			}, EXPECTED_PONG_BACK);
+			if (
+				provider._websocket &&
+				provider._websocket.readyState === provider._websocket.OPEN
+			) {
+				provider._websocket.ping();
+				pingTimeout = setTimeout(() => {
+					if (provider._websocket) {
+						provider._websocket.terminate();
+					}
+				}, EXPECTED_PONG_BACK);
+			}
 		}, KEEP_ALIVE_CHECK_INTERVAL);
 	});
 
 	provider._websocket.on("close", () => {
-		clearInterval(keepAliveInterval);
-		clearTimeout(pingTimeout);
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = undefined;
+		}
+		if (pingTimeout) {
+			clearTimeout(pingTimeout);
+			pingTimeout = undefined;
+		}
 		throw new Error("WebSocket closed");
 	});
 
 	provider._websocket.on("pong", () => {
-		clearInterval(pingTimeout);
+		if (pingTimeout) {
+			clearTimeout(pingTimeout);
+			pingTimeout = undefined;
+		}
 	});
+
+	provider._websocket.on("error", () => {
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = undefined;
+		}
+		if (pingTimeout) {
+			clearTimeout(pingTimeout);
+			pingTimeout = undefined;
+		}
+	});
+
 	return provider;
 }
 
