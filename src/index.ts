@@ -181,7 +181,7 @@ async function restart() {
 }
 
 process.on("uncaughtException", (err) => {
-	config.logger.error(err.message);
+	config.logger.error(err);
 	if (!restarting) {
 		restart();
 	}
