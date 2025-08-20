@@ -1,10 +1,10 @@
 import {
-  ChainIds,
-  SECONDS_IN_DAY,
-  findTokenByAddress,
-  getKnownTokens,
-  getTokenInfo,
-  stakingTokenAddresses,
+	ChainIds,
+	SECONDS_IN_DAY,
+	findTokenByAddress,
+	getKnownTokens,
+	getTokenInfo,
+	stakingTokenAddresses,
 } from "@airswap/utils";
 import axios from "axios";
 import * as dotenv from "dotenv";
@@ -25,90 +25,90 @@ const SAST_V5_ADDRESS = "0x8Bf384296A009723435aD5E8203DA5736b895038";
 const BIGGEST_SWAP_MIN = 200000;
 
 export const stats = async (args: string[], config: Config) => {
-  let interval = 30;
-  switch (args[0]) {
-    case "weekly":
-      interval = 7;
-      break;
-    case "monthly":
-      interval = 30;
-      break;
-    default:
-      if (Number.parseInt(args[0])) {
-        interval = Number.parseInt(args[0]);
-      } else {
-        interval = 7;
-      }
-  }
-  let dailies = [];
-  let lastId = Math.floor(Date.parse(JANUARY_FIRST) / 1000 / 86400);
-  let result: axios.AxiosResponse;
-  const todayId = Math.floor(Date.now() / 1000 / 86400);
+	let interval = 30;
+	switch (args[0]) {
+		case "weekly":
+			interval = 7;
+			break;
+		case "monthly":
+			interval = 30;
+			break;
+		default:
+			if (Number.parseInt(args[0])) {
+				interval = Number.parseInt(args[0]);
+			} else {
+				interval = 7;
+			}
+	}
+	let dailies = [];
+	let lastId = Math.floor(Date.parse(JANUARY_FIRST) / 1000 / 86400);
+	let result: axios.AxiosResponse;
+	const todayId = Math.floor(Date.now() / 1000 / 86400);
 
-  const subgraphURL = `https://gateway.thegraph.com/api/${config.get(
-    "SUBGRAPH_KEY"
-  )}/subgraphs/id/${config.get("SUBGRAPH_ID")}`;
+	const subgraphURL = `https://gateway.thegraph.com/api/${config.get(
+		"SUBGRAPH_KEY",
+	)}/subgraphs/id/${config.get("SUBGRAPH_ID")}`;
 
-  while (lastId < todayId) {
-    result = await axios.post(subgraphURL, {
-      query: `{
+	while (lastId < todayId) {
+		result = await axios.post(subgraphURL, {
+			query: `{
         dailies(where: { id_gt: ${lastId}} orderBy:id orderDirection:asc) {
           id
           volume
           fees
         }
       }`,
-    });
+		});
 
-    if (!result.data || !result.data.data) {
-      throw new Error(JSON.stringify(result.data.errors));
-    }
-    if (!result.data.data.dailies.length) break;
-    dailies = dailies.concat(result.data.data.dailies);
-    lastId = result.data.data.dailies[result.data.data.dailies.length - 1].id;
-  }
+		if (!result.data || !result.data.data) {
+			throw new Error(JSON.stringify(result.data.errors));
+		}
+		if (!result.data.data.dailies.length) break;
+		dailies = dailies.concat(result.data.data.dailies);
+		lastId = result.data.data.dailies[result.data.data.dailies.length - 1].id;
+	}
 
-  dailies = dailies.reverse();
+	dailies = dailies.reverse();
 
-  const yearToDate = dailies.reduce((total: any, value: any) => {
-    return total + Number(value.volume);
-  }, 0);
+	const yearToDate = dailies.reduce((total: any, value: any) => {
+		return total + Number(value.volume);
+	}, 0);
 
-  const intervalVol = dailies
-    .slice(0, interval)
-    .reduce((total: any, value: any) => {
-      return total + Number(value.volume);
-    }, 0);
-  const intervalFees = dailies
-    .slice(0, interval)
-    .reduce((total: any, value: any) => {
-      return total + Number(value.fees);
-    }, 0);
-  const lastIntervalVol = dailies
-    .slice(interval, interval * 2)
-    .reduce((total: any, value: any) => {
-      return total + Number(value.volume);
-    }, 0);
+	const intervalVol = dailies
+		.slice(0, interval)
+		.reduce((total: any, value: any) => {
+			return total + Number(value.volume);
+		}, 0);
+	const intervalFees = dailies
+		.slice(0, interval)
+		.reduce((total: any, value: any) => {
+			return total + Number(value.fees);
+		}, 0);
+	const lastIntervalVol = dailies
+		.slice(interval, interval * 2)
+		.reduce((total: any, value: any) => {
+			return total + Number(value.volume);
+		}, 0);
 
-  const intervalChange = (intervalVol / lastIntervalVol - 1) * 100;
+	const intervalChange = (intervalVol / lastIntervalVol - 1) * 100;
 
-  let intervalChangeLabel = `${intervalChange.toFixed(2)}%`;
-  intervalChangeLabel = (intervalChange > 1 ? "+" : "") + intervalChangeLabel;
+	let intervalChangeLabel = `${intervalChange.toFixed(2)}%`;
+	intervalChangeLabel = (intervalChange > 1 ? "+" : "") + intervalChangeLabel;
 
-  const { tokens } = await getKnownTokens(ChainIds.MAINNET);
-  const provider = new ethers.providers.JsonRpcProvider(
-    getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID"))
-  );
+	const { tokens } = await getKnownTokens(ChainIds.MAINNET);
+	const provider = new ethers.providers.JsonRpcProvider(
+		getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID")),
+	);
 
-  const lastIntervalStart =
-    Math.floor(Date.now() / 1000) - SECONDS_IN_DAY * interval;
+	const lastIntervalStart =
+		Math.floor(Date.now() / 1000) - SECONDS_IN_DAY * interval;
 
-  result = await axios.post(subgraphURL, {
-    query: `{
+	result = await axios.post(subgraphURL, {
+		query: `{
         swapERC20S(
           where: {senderAmountUSD_gt:${Number(
-            BIGGEST_SWAP_MIN
-          )} blockTimestamp_gt:${lastIntervalStart}}
+						BIGGEST_SWAP_MIN,
+					)} blockTimestamp_gt:${lastIntervalStart}}
         ) {
           nonce
           senderAmountUSD
@@ -120,62 +120,62 @@ export const stats = async (args: string[], config: Config) => {
           }
         }
       }`,
-  });
-  let biggest = {
-    senderAmountUSD: 0,
-    senderToken: "",
-    signerToken: "",
-  };
-  result.data.data.swapERC20S.map((value: any) => {
-    if (Number(value.senderAmountUSD) > Number(biggest.senderAmountUSD)) {
-      biggest = value;
-    }
-  });
+	});
+	let biggest = {
+		senderAmountUSD: 0,
+		senderToken: "",
+		signerToken: "",
+	};
+	result.data.data.swapERC20S.map((value: any) => {
+		if (Number(value.senderAmountUSD) > Number(biggest.senderAmountUSD)) {
+			biggest = value;
+		}
+	});
 
-  let senderTokenInfo = findTokenByAddress(biggest.senderToken, tokens);
-  if (!senderTokenInfo) {
-    senderTokenInfo = await getTokenInfo(provider, biggest.senderToken);
-  }
-  let signerTokenInfo = findTokenByAddress(biggest.signerToken, tokens);
-  if (!signerTokenInfo) {
-    signerTokenInfo = await getTokenInfo(provider, biggest.signerToken);
-  }
+	let senderTokenInfo = findTokenByAddress(biggest.senderToken, tokens);
+	if (!senderTokenInfo) {
+		senderTokenInfo = await getTokenInfo(provider, biggest.senderToken);
+	}
+	let signerTokenInfo = findTokenByAddress(biggest.signerToken, tokens);
+	if (!signerTokenInfo) {
+		signerTokenInfo = await getTokenInfo(provider, biggest.signerToken);
+	}
 
-  const stakingToken = new ethers.Contract(
-    stakingTokenAddresses[ChainIds.MAINNET],
-    erc20Interface,
-    provider
-  );
-  const supply = BigNumber.from(AST_TOTAL_SUPPLY);
-  const treasury = await stakingToken.balanceOf(TREASURY_ADDRESS);
-  const treasuryBalance = BigNumber.from(treasury);
-  const circulating = supply.sub(treasuryBalance);
-  const sASTv3 = await stakingToken.balanceOf(SAST_V3_ADDRESS);
-  const sASTv4 = await stakingToken.balanceOf(SAST_V4_ADDRESS);
-  const sASTv5 = await stakingToken.balanceOf(SAST_V5_ADDRESS);
-  const totalStaked = BigNumber.from(sASTv3).add(sASTv4).add(sASTv5);
-  const percentStaked = FixedNumber.from(totalStaked)
-    .divUnsafe(FixedNumber.from(circulating))
-    .mulUnsafe(FixedNumber.from("100"))
-    .toString()
-    .slice(0, 5);
-  const totalStakedString = totalStaked.div(10000).toNumber();
+	const stakingToken = new ethers.Contract(
+		stakingTokenAddresses[ChainIds.MAINNET],
+		erc20Interface,
+		provider,
+	);
+	const supply = BigNumber.from(AST_TOTAL_SUPPLY);
+	const treasury = await stakingToken.balanceOf(TREASURY_ADDRESS);
+	const treasuryBalance = BigNumber.from(treasury);
+	const circulating = supply.sub(treasuryBalance);
+	const sASTv3 = await stakingToken.balanceOf(SAST_V3_ADDRESS);
+	const sASTv4 = await stakingToken.balanceOf(SAST_V4_ADDRESS);
+	const sASTv5 = await stakingToken.balanceOf(SAST_V5_ADDRESS);
+	const totalStaked = BigNumber.from(sASTv3).add(sASTv4).add(sASTv5);
+	const percentStaked = FixedNumber.from(totalStaked)
+		.divUnsafe(FixedNumber.from(circulating))
+		.mulUnsafe(FixedNumber.from("100"))
+		.toString()
+		.slice(0, 5);
+	const totalStakedString = totalStaked.div(10000).toNumber();
 
-  return `Mainnet Report (${interval}-day)
+	return `Mainnet Report (${interval}-day)
 
 🔹 **$${formatNumber(
-    intervalVol
-  )}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(
-    intervalFees
-  )} fees
+		intervalVol,
+	)}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(
+		intervalFees,
+	)} fees
 💥 **$${formatNumber(
-    biggest.senderAmountUSD
-  )}** ${interval}-day biggest swap (${signerTokenInfo.symbol}/${
-    senderTokenInfo.symbol
-  })
+		biggest.senderAmountUSD,
+	)}** ${interval}-day biggest swap (${signerTokenInfo.symbol}/${
+		senderTokenInfo.symbol
+	})
 🔒 **${formatNumber(
-    totalStakedString
-  )} AST** (${percentStaked}%) staked by members
+		totalStakedString,
+	)} AST** (${percentStaked}%) staked by members
 🚀 **$${formatNumber(yearToDate)}** year-to-date vol
 
 #BUIDL with AirSwap today!
