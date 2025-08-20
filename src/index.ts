@@ -19,8 +19,6 @@ const HTTP_PROVIDERS = [
   ChainIds.BSC,
 ]
 const WS_PROVIDERS = [ChainIds.MAINNET]
-const RECONNECT_DELAY = 10000
-const MIN_RESTART_INTERVAL = 30000 // Minimum 30 seconds between restarts
 
 const config = new Config()
 const channels = [new Discord(config), new Twitter(config)]
@@ -81,7 +79,8 @@ async function startup() {
   for (const chainId of WS_PROVIDERS) {
     networks[chainId] = createSocketProvider(
       chainId,
-      config.get('INFURA_PROJECT_ID')
+      config.get('INFURA_PROJECT_ID'),
+      config
     )
   }
   // Start listeners on all networks
@@ -110,7 +109,7 @@ async function restart() {
     config.logger.warn('Restart already in progress, ignoring restart request')
     return
   }
-  if (now - lastRestartTime < MIN_RESTART_INTERVAL) {
+  if (now - lastRestartTime < config.get('MIN_RESTART_INTERVAL_MS')) {
     config.logger.warn(
       `Restart too soon after last restart, ignoring (${(now - lastRestartTime) / 1000}s ago)`
     )
@@ -168,16 +167,18 @@ async function restart() {
     config.logger.error('Error during restart cleanup:', e.message)
   }
 
-  config.logger.info(`Done. Restarting in ${RECONNECT_DELAY / 1000}s.`)
+  config.logger.info(
+    `Done. Restarting in ${config.get('RECONNECT_DELAY_MS') / 1000}s.`
+  )
   // Restart after delay
   setTimeout(() => {
     restarting = false
     startup().catch((e) => {
       config.logger.error('Error during startup:', e.message)
       // If startup fails, try again after delay
-      setTimeout(() => restart(), RECONNECT_DELAY)
+      setTimeout(() => restart(), config.get('RECONNECT_DELAY_MS'))
     })
-  }, RECONNECT_DELAY)
+  }, config.get('RECONNECT_DELAY_MS'))
 }
 
 process.on('uncaughtException', (err) => {

@@ -39,9 +39,10 @@ export default class Discord {
       this.client.login(this.config.get('DISCORD_TOKEN')).then(() => {
         this.client.on(Events.ClientReady, resolve)
         this.client.on(Events.MessageCreate, async (message) => {
-          if (message.content.startsWith('<@1072118621809156116>')) {
+          const botMention = `<@${this.config.get('DISCORD_BOT_USER_ID')}>`
+          if (message.content.startsWith(botMention)) {
             handleCommand(
-              message.content.slice(23).trim(),
+              message.content.slice(botMention.length).trim(),
               message,
               this.config
             )
@@ -63,7 +64,7 @@ export default class Discord {
     }))
     const embed = new EmbedBuilder()
       .setDescription(title)
-      .setColor(2847231)
+      .setColor(this.config.get('DISCORD_EMBED_COLOR'))
       .addFields(fields)
     if (channel?.type === ChannelType.GuildText) {
       channel?.send({ embeds: [embed] })
@@ -74,7 +75,7 @@ export default class Discord {
     const title = '💥 Big Swap'
     const embed = new EmbedBuilder()
       .setDescription(title)
-      .setColor(2847231)
+      .setColor(this.config.get('DISCORD_EMBED_COLOR'))
       .addFields([
         {
           name: 'Sender Tokens',

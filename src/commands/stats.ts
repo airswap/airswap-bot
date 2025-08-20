@@ -22,7 +22,6 @@ const TREASURY_ADDRESS = '0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534'
 const SAST_V3_ADDRESS = '0x6d88B09805b90dad911E5C5A512eEDd984D6860B'
 const SAST_V4_ADDRESS = '0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860'
 const SAST_V5_ADDRESS = '0x8Bf384296A009723435aD5E8203DA5736b895038'
-const BIGGEST_SWAP_MIN = 200000
 
 export const stats = async (args: string[], config: Config) => {
   let interval = 30
@@ -107,9 +106,10 @@ export const stats = async (args: string[], config: Config) => {
     query: `{
         swapERC20S(
           where: {senderAmountUSD_gt:${Number(
-            BIGGEST_SWAP_MIN
+            config.get('BIG_SWAP_MIN_VALUE')
           )} blockTimestamp_gt:${lastIntervalStart}}
         ) {
+          transactionHash
           nonce
           senderAmountUSD
           signerToken {

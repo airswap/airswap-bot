@@ -50,7 +50,7 @@ export const handleCommand = async (
             const result = await handlers[command.trim()](args, config)
             message.reply({ content: result, fetchReply: true })
             config.logger.info(`[Response] ${result}`)
-          }, 1000)
+          }, config.get('COMMAND_RESPONSE_DELAY_MS'))
         } catch (e: any) {
           message.reply({
             content: `Had a problem with command: ${JSON.stringify(e.message)}`,

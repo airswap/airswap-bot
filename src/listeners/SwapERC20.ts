@@ -151,7 +151,7 @@ export class SwapERC20 {
         signerTokenInfo.symbol
       }`,
       swapValue,
-      feeValue: swapValue * 0.0005,
+      feeValue: swapValue * this.config.get('PROTOCOL_FEE_RATE'),
     }
 
     this.config.logger.info(

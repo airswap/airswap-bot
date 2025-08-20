@@ -4,7 +4,6 @@ import * as jayson from 'jayson'
 import validUrl from 'valid-url'
 import type { Config } from '../utils'
 
-const REQUEST_TIMEOUT = 10000
 
 export const inspect = async (args: string[], config: Config) => {
   const chainId = ChainIds[args[0].toUpperCase()] || ChainIds.MAINNET
@@ -32,7 +31,7 @@ export const inspect = async (args: string[], config: Config) => {
     hostname: locatorUrl.hostname,
     pathname: locatorUrl.pathname,
     port: locatorUrl.port,
-    timeout: REQUEST_TIMEOUT,
+    timeout: config.get('HTTP_REQUEST_TIMEOUT_MS'),
   }
 
   let client: any
