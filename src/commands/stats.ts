@@ -21,6 +21,7 @@ const AST_TOTAL_SUPPLY = 5000000000000;
 const TREASURY_ADDRESS = "0x24B4ce3Ad4366b73F839C1B1Fd11D1F636514534";
 const SAST_V3_ADDRESS = "0x6d88B09805b90dad911E5C5A512eEDd984D6860B";
 const SAST_V4_ADDRESS = "0x9fc450F9AfE2833Eb44f9A1369Ab3678D3929860";
+const SAST_V5_ADDRESS = "0x8Bf384296A009723435aD5E8203DA5736b895038";
 const BIGGEST_SWAP_MIN = 200000;
 
 export const stats = async (args: string[], config: Config) => {
@@ -44,7 +45,9 @@ export const stats = async (args: string[], config: Config) => {
 	let result: axios.AxiosResponse;
 	const todayId = Math.floor(Date.now() / 1000 / 86400);
 
-	const subgraphURL = `https://gateway.thegraph.com/api/${config.get("SUBGRAPH_KEY")}/subgraphs/id/${config.get("SUBGRAPH_ID")}`;
+	const subgraphURL = `https://gateway.thegraph.com/api/${config.get(
+		"SUBGRAPH_KEY",
+	)}/subgraphs/id/${config.get("SUBGRAPH_ID")}`;
 
 	while (lastId < todayId) {
 		result = await axios.post(subgraphURL, {
@@ -97,12 +100,15 @@ export const stats = async (args: string[], config: Config) => {
 		getHTTPProviderURL(ChainIds.MAINNET, config.get("INFURA_PROJECT_ID")),
 	);
 
-	const lastIntervalStart = Math.floor(Date.now() / 1000) - SECONDS_IN_DAY * interval;
+	const lastIntervalStart =
+		Math.floor(Date.now() / 1000) - SECONDS_IN_DAY * interval;
 
 	result = await axios.post(subgraphURL, {
 		query: `{
         swapERC20S(
-          where: {senderAmountUSD_gt:${Number(BIGGEST_SWAP_MIN)} blockTimestamp_gt:${lastIntervalStart}}
+          where: {senderAmountUSD_gt:${Number(
+						BIGGEST_SWAP_MIN,
+					)} blockTimestamp_gt:${lastIntervalStart}}
         ) {
           nonce
           senderAmountUSD
@@ -146,7 +152,8 @@ export const stats = async (args: string[], config: Config) => {
 	const circulating = supply.sub(treasuryBalance);
 	const sASTv3 = await stakingToken.balanceOf(SAST_V3_ADDRESS);
 	const sASTv4 = await stakingToken.balanceOf(SAST_V4_ADDRESS);
-	const totalStaked = BigNumber.from(sASTv3).add(sASTv4);
+	const sASTv5 = await stakingToken.balanceOf(SAST_V5_ADDRESS);
+	const totalStaked = BigNumber.from(sASTv3).add(sASTv4).add(sASTv5);
 	const percentStaked = FixedNumber.from(totalStaked)
 		.divUnsafe(FixedNumber.from(circulating))
 		.mulUnsafe(FixedNumber.from("100"))
@@ -158,10 +165,14 @@ export const stats = async (args: string[], config: Config) => {
 
 🔹 **$${formatNumber(
 		intervalVol,
-	)}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(intervalFees)} fees
-💥 **$${formatNumber(biggest.senderAmountUSD)}** ${interval}-day biggest swap (${
-		signerTokenInfo.symbol
-	}/${senderTokenInfo.symbol})
+	)}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(
+		intervalFees,
+	)} fees
+💥 **$${formatNumber(
+		biggest.senderAmountUSD,
+	)}** ${interval}-day biggest swap (${signerTokenInfo.symbol}/${
+		senderTokenInfo.symbol
+	})
 🔒 **${formatNumber(
 		totalStakedString,
 	)} AST** (${percentStaked}%) staked by members
