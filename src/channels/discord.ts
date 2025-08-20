@@ -40,7 +40,11 @@ export default class Discord {
 				this.client.on(Events.ClientReady, resolve);
 				this.client.on(Events.MessageCreate, async (message) => {
 					if (message.content.startsWith("<@1072118621809156116>")) {
-						handleCommand(message.content.slice(23), message, this.config);
+						handleCommand(
+							message.content.slice(23).trim(),
+							message,
+							this.config,
+						);
 					}
 				});
 			});

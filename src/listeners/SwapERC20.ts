@@ -125,7 +125,7 @@ export class SwapERC20 {
 				signerTokenInfo.symbol
 			}`,
 			swapValue,
-			feeValue: swapValue * 0.0007,
+			feeValue: swapValue * 0.0005,
 		};
 
 		this.config.logger.info(
@@ -169,7 +169,11 @@ export class SwapERC20 {
 
 	async stop() {
 		try {
-			if (this.contract) this.contract.off("SwapERC20", this.listener);
+			if (this.contract) {
+				this.contract.off("SwapERC20", this.listener);
+				// Clear contract reference to help with garbage collection
+				this.contract = null;
+			}
 		} catch (e: any) {
 			this.config.logger.error(
 				"SwapERC20: problem removing SwapERC20 event subscription",
