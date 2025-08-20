@@ -9,14 +9,12 @@ First, please give us a star! ⭐️
 ## Features
 
 - Commands (Discord or CLI)
-
   - `stats` generates a mainnet stats report
   - `compliance :chainName` checks all servers for RFQ compliance
   - `inspect :chainName :server :signerToken :senderToken :senderAmount` checks an individual server for RFQ compliance
   - `launch :chainName :collectionToken :currencySymbol` launches an NFT marketplace on IPFS
 
 - Event Listeners
-
   - `SwapERC20` publishes big swaps to Twitter and Discord
   - Contracts `Registry`, `Delegate`, `Pool`, `Staking` publish events to Discord
 
