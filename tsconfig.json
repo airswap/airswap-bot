@@ -1,13 +1,13 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"esModuleInterop": true,
-		"resolveJsonModule": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "./build"
-	},
-	"include": ["src/**/*"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "./build"
+  },
+  "include": ["src/**/*"]
 }
