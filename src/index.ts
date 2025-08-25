@@ -66,7 +66,22 @@ async function startup() {
   // Initialize channels
   config.logger.info(`Channels: ${channels.map((c) => c.name).join(', ')}`)
   for (const channel in channels) {
-    await channels[channel].init()
+    try {
+      await channels[channel].init()
+    } catch (e: any) {
+      config.logger.error(
+        `Failed to initialize ${channels[channel].name}:`,
+        e.message
+      )
+      // If Discord rate limited, don't restart immediately
+      if (e.message && e.message.includes('Not enough sessions remaining')) {
+        config.logger.info(
+          'Discord rate limited during startup, continuing with other services'
+        )
+        continue
+      }
+      throw e
+    }
   }
   // Create HTTP providers
   config.logger.info('Providers: HTTP', HTTP_PROVIDERS, 'WS', WS_PROVIDERS)
@@ -167,9 +182,9 @@ async function restart() {
     config.logger.error('Error during restart cleanup:', e.message)
   }
 
-  config.logger.info(
-    `Done. Restarting in ${config.get('RECONNECT_DELAY_MS') / 1000}s.`
-  )
+  const reconnectDelayMs = config.get('RECONNECT_DELAY_MS')
+  const reconnectDelaySeconds = reconnectDelayMs / 1000
+  config.logger.info(`Done. Restarting in ${reconnectDelaySeconds}s.`)
   // Restart after delay
   setTimeout(() => {
     restarting = false

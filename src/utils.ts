@@ -24,7 +24,6 @@ const POOL_FACTORY_CONTRACT_ADDRESS =
   '0x1F98431c8aD98523631AE4a59f267346ea31F984'
 const QUOTER_CONTRACT_ADDRESS = '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6'
 
-
 const DEFAULT_BIG_SWAP_MIN_VALUE = 100000
 const DEFAULT_BIG_SWAP_MAX_VALUE = 100000000
 const DEFAULT_RECONNECT_DELAY_MS = 10000
@@ -426,7 +425,12 @@ export class Config {
   }
 
   public get(key: string) {
-    return this.vars[key]
+    const value = this.vars[key]
+    // Ensure numeric values are properly parsed
+    if (typeof value === 'string' && !isNaN(Number(value))) {
+      return Number(value)
+    }
+    return value
   }
 
   public set(key: string, value: any) {
