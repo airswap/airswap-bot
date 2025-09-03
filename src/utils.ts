@@ -441,7 +441,37 @@ export class Config {
       }
     }
 
-    // Ensure numeric values are properly parsed
+    // Keys that should remain as strings (IDs, tokens, etc.)
+    const stringKeys = [
+      'DISCORD_BOT_USER_ID',
+      'DISCORD_TOKEN',
+      'DISCORD_SWAPS_CHANNEL',
+      'DISCORD_EVENTS_CHANNEL',
+      'TWITTER_APP_KEY',
+      'TWITTER_APP_SECRET',
+      'TWITTER_ACCESS_TOKEN',
+      'TWITTER_ACCESS_SECRET',
+      'SUBGRAPH_KEY',
+      'SUBGRAPH_ID',
+      'EXEMPTIONS',
+      'TEST_SENDER_WALLET',
+      'ALCHEMY_KEYS_1',
+      'ALCHEMY_KEYS_137',
+      'ALCHEMY_KEYS_8453',
+      'ALCHEMY_KEYS_11155111',
+      'REPO_URL',
+      'IPFS_URL',
+      'STORAGE_SERVER_URL',
+      'INFURA_PROJECT_ID',
+      'INFURA_PROJECT_SECRET',
+    ]
+
+    // Don't convert string keys to numbers
+    if (stringKeys.includes(key)) {
+      return value
+    }
+
+    // Ensure numeric values are properly parsed for other keys
     if (typeof value === 'string' && !isNaN(Number(value))) {
       return Number(value)
     }
