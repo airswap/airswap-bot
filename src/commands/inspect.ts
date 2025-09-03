@@ -4,7 +4,6 @@ import * as jayson from 'jayson'
 import validUrl from 'valid-url'
 import type { Config } from '../utils'
 
-
 export const inspect = async (args: string[], config: Config) => {
   const chainId = ChainIds[args[0].toUpperCase()] || ChainIds.MAINNET
   const serverURL = args[1]

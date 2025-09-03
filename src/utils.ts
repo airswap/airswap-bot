@@ -175,7 +175,8 @@ export function createSocketProvider(
     }, config.get('WEBSOCKET_KEEPALIVE_INTERVAL_MS'))
   })
 
-  provider._websocket.on('close', () => {
+  provider._websocket.on('close', (code, reason) => {
+    config.logger.warn(`WebSocket closed: ${code} ${reason}`)
     if (keepAliveInterval) {
       clearInterval(keepAliveInterval)
       keepAliveInterval = undefined
@@ -184,7 +185,6 @@ export function createSocketProvider(
       clearTimeout(pingTimeout)
       pingTimeout = undefined
     }
-    throw new Error('WebSocket closed')
   })
 
   provider._websocket.on('pong', () => {
@@ -194,7 +194,8 @@ export function createSocketProvider(
     }
   })
 
-  provider._websocket.on('error', () => {
+  provider._websocket.on('error', (error) => {
+    config.logger.error('WebSocket error:', error.message)
     if (keepAliveInterval) {
       clearInterval(keepAliveInterval)
       keepAliveInterval = undefined
@@ -370,8 +371,10 @@ const config = fs.readJsonSync(configPath)
 export class Config {
   public vars: any
   public logger: bunyan
+  private defaults: any
+
   public constructor() {
-    this.vars = {
+    this.defaults = {
       PUBLISHING: false,
       BIG_SWAP_MIN_VALUE: DEFAULT_BIG_SWAP_MIN_VALUE,
       BIG_SWAP_MAX_VALUE: DEFAULT_BIG_SWAP_MAX_VALUE,
@@ -406,8 +409,10 @@ export class Config {
       INFURA_PROJECT_SECRET: '',
     }
 
+    this.vars = { ...this.defaults }
+
     for (const key in this.vars) {
-      this.vars[key] = process.env[key] || config[key]
+      this.vars[key] = process.env[key] || config[key] || this.defaults[key]
     }
     this.logger = bunyan.createLogger({
       name: 'airswapbot',
@@ -425,11 +430,22 @@ export class Config {
   }
 
   public get(key: string) {
-    const value = this.vars[key]
+    let value = this.vars[key]
+
+    // If value is undefined or null, use default
+    if (value === undefined || value === null) {
+      value = this.defaults[key]
+      if (value === undefined || value === null) {
+        console.warn(`Configuration key '${key}' has no default value`)
+        return undefined
+      }
+    }
+
     // Ensure numeric values are properly parsed
     if (typeof value === 'string' && !isNaN(Number(value))) {
       return Number(value)
     }
+
     return value
   }
 

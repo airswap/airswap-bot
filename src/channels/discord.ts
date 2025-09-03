@@ -36,7 +36,7 @@ export default class Discord {
           GatewayIntentBits.GuildMessageReactions,
         ],
       })
-      
+
       // Handle rate limit errors
       this.client.on(Events.Error, (error) => {
         this.config.logger.error('Discord client error:', error.message)
@@ -46,11 +46,15 @@ export default class Discord {
           if (resetMatch) {
             const resetTime = new Date(resetMatch[1])
             const waitTime = resetTime.getTime() - Date.now()
-            this.config.logger.info(`Discord rate limited. Waiting ${Math.ceil(waitTime / 1000 / 60)} minutes until reset.`)
-            
+            this.config.logger.info(
+              `Discord rate limited. Waiting ${Math.ceil(waitTime / 1000 / 60)} minutes until reset.`
+            )
+
             // Wait until reset time plus a small buffer
             setTimeout(() => {
-              this.config.logger.info('Attempting Discord reconnection after rate limit reset')
+              this.config.logger.info(
+                'Attempting Discord reconnection after rate limit reset'
+              )
               this.init().then(resolve).catch(reject)
             }, waitTime + 5000) // 5 second buffer
             return
@@ -59,38 +63,45 @@ export default class Discord {
         reject(error)
       })
 
-      this.client.login(this.config.get('DISCORD_TOKEN')).then(() => {
-        this.client.on(Events.ClientReady, resolve)
-        this.client.on(Events.MessageCreate, async (message) => {
-          const botMention = `<@${this.config.get('DISCORD_BOT_USER_ID')}>`
-          if (message.content.startsWith(botMention)) {
-            handleCommand(
-              message.content.slice(botMention.length).trim(),
-              message,
-              this.config
-            )
-          }
+      this.client
+        .login(this.config.get('DISCORD_TOKEN'))
+        .then(() => {
+          this.client.on(Events.ClientReady, resolve)
+          this.client.on(Events.MessageCreate, async (message) => {
+            const botMention = `<@${this.config.get('DISCORD_BOT_USER_ID')}>`
+            if (message.content.startsWith(botMention)) {
+              handleCommand(
+                message.content.slice(botMention.length).trim(),
+                message,
+                this.config
+              )
+            }
+          })
         })
-      }).catch((error) => {
-        this.config.logger.error('Discord login failed:', error.message)
-        if (error.message.includes('Not enough sessions remaining')) {
-          // Extract reset time from error message
-          const resetMatch = error.message.match(/resets at (.+)/)
-          if (resetMatch) {
-            const resetTime = new Date(resetMatch[1])
-            const waitTime = resetTime.getTime() - Date.now()
-            this.config.logger.info(`Discord rate limited. Waiting ${Math.ceil(waitTime / 1000 / 60)} minutes until reset.`)
-            
-            // Wait until reset time plus a small buffer
-            setTimeout(() => {
-              this.config.logger.info('Attempting Discord reconnection after rate limit reset')
-              this.init().then(resolve).catch(reject)
-            }, waitTime + 5000) // 5 second buffer
-            return
+        .catch((error) => {
+          this.config.logger.error('Discord login failed:', error.message)
+          if (error.message.includes('Not enough sessions remaining')) {
+            // Extract reset time from error message
+            const resetMatch = error.message.match(/resets at (.+)/)
+            if (resetMatch) {
+              const resetTime = new Date(resetMatch[1])
+              const waitTime = resetTime.getTime() - Date.now()
+              this.config.logger.info(
+                `Discord rate limited. Waiting ${Math.ceil(waitTime / 1000 / 60)} minutes until reset.`
+              )
+
+              // Wait until reset time plus a small buffer
+              setTimeout(() => {
+                this.config.logger.info(
+                  'Attempting Discord reconnection after rate limit reset'
+                )
+                this.init().then(resolve).catch(reject)
+              }, waitTime + 5000) // 5 second buffer
+              return
+            }
           }
-        }
-        reject(error)
-      })
+          reject(error)
+        })
     })
   }
   public async close() {
