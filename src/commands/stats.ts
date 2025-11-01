@@ -179,7 +179,7 @@ export const stats = async (args: string[], config: Config) => {
   )}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(
     intervalFees
   )} fees
-  ${biggestSwap}
+${biggestSwap}
 🔒 **${formatNumber(
     totalStakedString
   )} AST** (${percentStaked}%) staked by members
