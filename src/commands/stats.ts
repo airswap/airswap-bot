@@ -121,6 +121,7 @@ export const stats = async (args: string[], config: Config) => {
         }
       }`,
   })
+  let biggestSwap = ''
   let biggest = {
     senderAmountUSD: 0,
     senderToken: '',
@@ -132,13 +133,23 @@ export const stats = async (args: string[], config: Config) => {
     }
   })
 
-  let senderTokenInfo = findTokenByAddress(biggest.senderToken, tokens)
-  if (!senderTokenInfo) {
-    senderTokenInfo = await getTokenInfo(provider, biggest.senderToken)
-  }
-  let signerTokenInfo = findTokenByAddress(biggest.signerToken, tokens)
-  if (!signerTokenInfo) {
-    signerTokenInfo = await getTokenInfo(provider, biggest.signerToken)
+  if (biggest.senderAmountUSD > 0) {
+    let senderTokenInfo = findTokenByAddress(biggest.senderToken, tokens)
+    if (!senderTokenInfo) {
+      senderTokenInfo = await getTokenInfo(provider, biggest.senderToken)
+    }
+    let signerTokenInfo = findTokenByAddress(biggest.signerToken, tokens)
+    if (!signerTokenInfo) {
+      signerTokenInfo = await getTokenInfo(provider, biggest.signerToken)
+    }
+
+    if (biggest.senderAmountUSD > 0) {
+      biggestSwap = `💥 **$${formatNumber(
+        biggest.senderAmountUSD
+      )}** ${interval}-day biggest swap (${signerTokenInfo.symbol}/${
+        senderTokenInfo.symbol
+      })`
+    }
   }
 
   const stakingToken = new ethers.Contract(
@@ -168,11 +179,7 @@ export const stats = async (args: string[], config: Config) => {
   )}** ${interval}-day vol (${intervalChangeLabel}) / $${formatNumber(
     intervalFees
   )} fees
-💥 **$${formatNumber(
-    biggest.senderAmountUSD
-  )}** ${interval}-day biggest swap (${signerTokenInfo.symbol}/${
-    senderTokenInfo.symbol
-  })
+  ${biggestSwap}
 🔒 **${formatNumber(
     totalStakedString
   )} AST** (${percentStaked}%) staked by members
